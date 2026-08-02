@@ -113,7 +113,7 @@ export default function AgentDetailPage() {
         purpose: payoutForm.purpose || undefined,
       });
       if (res.policy_decision === "approval_required") {
-        toast("info", "Payout requires approval � check dashboard");
+        toast("info", "Payout requires approval — check dashboard");
       } else {
         toast("success", "Payout created: " + res.status);
       }
@@ -125,6 +125,18 @@ export default function AgentDetailPage() {
       const msg = err instanceof Error ? err.message : "Payout request failed";
       toast("error", msg);
     } finally { setSubmitting(false); }
+  };
+
+  const handleApprovePayout = async (payoutId: string) => {
+    try {
+      await api.approvePayout(payoutId);
+      toast("success", "Payout approved");
+      const res = await api.listAgentPayouts(agentId, { limit: 20 });
+      setPayouts(res.payouts);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to approve payout";
+      toast("error", msg);
+    }
   };
 
   if (loading) {
@@ -330,9 +342,9 @@ export default function AgentDetailPage() {
 
       {activeTab === "payouts" && (
         <Table>
-          <TableHeader><TableRow><TableHead>Payee</TableHead><TableHead>Amount</TableHead><TableHead>Mode</TableHead><TableHead>Status</TableHead><TableHead>Provider</TableHead><TableHead>Time</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Payee</TableHead><TableHead>Amount</TableHead><TableHead>Mode</TableHead><TableHead>Status</TableHead><TableHead>Provider</TableHead><TableHead>Time</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
           <TableBody>
-            {payouts.length === 0 ? <TableEmpty colSpan={6} message="No payouts yet" /> : payouts.map((p) => (
+            {payouts.length === 0 ? <TableEmpty colSpan={7} message="No payouts yet" /> : payouts.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.payee_label}</TableCell>
                 <TableCell className="font-mono">{formatPaise(p.amount_paise)}</TableCell>
@@ -340,6 +352,11 @@ export default function AgentDetailPage() {
                 <TableCell><Badge variant={getStatusVariant(p.policy_decision)}>{p.policy_decision}</Badge></TableCell>
                 <TableCell className="text-xs text-text-muted">{p.razorpay_status || "-"}</TableCell>
                 <TableCell className="text-text-muted text-xs">{new Date(p.created_at).toLocaleString()}</TableCell>
+                <TableCell>
+                  {p.policy_decision === "approval_required" && (
+                    <Button variant="success" size="sm" onClick={() => handleApprovePayout(p.id)}>Approve</Button>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

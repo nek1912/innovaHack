@@ -64,6 +64,7 @@ async def execute_task(
         task_description=task["description"],
         payee_id=payee_id,
         session=db,
+        task_amount_paise=task.get("amount_paise"),
     )
 
 

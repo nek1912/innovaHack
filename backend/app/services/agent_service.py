@@ -35,20 +35,24 @@ You cannot modify spending limits.
 
 You cannot approve your own requests.
 
-IMPORTANT: When funds are required, directly call request_payout() with the payee_id provided in the context. Do NOT call list_allowed_payees() first - the payee is already provided.
+IMPORTANT: 
+- Use the EXACT amount specified in the task context. Do NOT estimate your own amount.
+- The payee_id is provided in the context. Use it directly.
+- Call request_payout() with the task's amount and the provided payee_id.
+- Do NOT call list_allowed_payees() first - the payee is already provided.
 
 Respond with ONLY a JSON object:
 {
-  "thinking": "Your reasoning about the task",
+  "thinking": "Brief reasoning",
   "action": "request_payout",
   "params": {
     "payee_id": "use the payee_id from context",
-    "amount_paise": estimated amount,
+    "amount_paise": use the EXACT amount from task context,
     "mode": "upi",
     "purpose": "task description"
   },
   "status": "working",
-  "message": "Brief status message"
+  "message": "Requesting funds"
 }
 """
 
@@ -64,6 +68,7 @@ class AgentService:
         task_description: str,
         session: AsyncSession,
         payee_id: str | None = None,
+        task_amount_paise: int | None = None,
     ) -> dict:
         result = await session.execute(select(Agent).where(Agent.id == agent_id))
         agent = result.scalar_one_or_none()
@@ -84,6 +89,7 @@ class AgentService:
             "daily_cap": agent.daily_cap_paise,
             "per_tx_cap": agent.per_tx_cap_paise,
             "payee_id": payee_id,
+            "task_amount_paise": task_amount_paise,
         }
 
         try:
@@ -133,7 +139,7 @@ class AgentService:
                             db=session,
                             agent=agent,
                             payee_id=params.get("payee_id"),
-                            amount_paise=params.get("amount_paise", 10000),
+                            amount_paise=task_amount_paise or params.get("amount_paise", 10000),
                             mode=params.get("mode", "upi"),
                             purpose=params.get("purpose", task_description),
                             task_id=task_id,
@@ -142,7 +148,18 @@ class AgentService:
                         parsed["message"] = f"Payout created: {payout_result.get('status', 'unknown')}"
                         parsed["status"] = "completed"
                     except Exception as e:
-                        parsed["message"] = f"Payout failed: {str(e)}"
+                        error_msg = str(e)
+                        if "BAD_REQUEST" in error_msg:
+                            friendly_msg = "Payment request was rejected by the provider. Please check payee details."
+                        elif "insufficient" in error_msg.lower():
+                            friendly_msg = "Insufficient credit available for this transaction."
+                        elif "frozen" in error_msg.lower():
+                            friendly_msg = "Agent is frozen. Cannot process payments."
+                        elif "policy" in error_msg.lower():
+                            friendly_msg = "Payment blocked by company policy."
+                        else:
+                            friendly_msg = "Payment could not be processed. Please try again."
+                        parsed["message"] = friendly_msg
                         parsed["status"] = "error"
 
                 return {
