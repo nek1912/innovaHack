@@ -14,7 +14,7 @@ import { ArrowLeft, Plus, Lock, Unlock, Wallet, Clock, Power, Send } from "lucid
 import Link from "next/link";
 
 function formatPaise(paise: number) {
-  return "?" + (paise / 100).toLocaleString("en-IN");
+  return `₹${(paise / 100).toLocaleString("en-IN")}`;
 }
 
 type Tab = "overview" | "payees" | "payouts" | "audit";
