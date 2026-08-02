@@ -271,7 +271,7 @@ async def execute_payout_direct(
             fund_account_id=payee.razorpay_fund_account_id,
             amount_paise=amount_paise,
             mode=mode,
-            purpose=purpose or "payout",
+            purpose=(purpose or "payout")[:30],
             idempotency_key=str(payout.id),
             narration=f"AFCS {str(payout.id)[:8]}",
         )

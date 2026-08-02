@@ -245,7 +245,7 @@ async def approve_payout(
             fund_account_id=payee.razorpay_fund_account_id,
             amount_paise=payout.amount_paise,
             mode=payout.mode,
-            purpose=payout.purpose or "payout",
+            purpose=(payout.purpose or "payout")[:30],
             idempotency_key=str(payout.id),
             narration=f"AFCS {str(payout.id)[:8]}",
         )
