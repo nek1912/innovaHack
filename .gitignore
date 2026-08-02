@@ -32,6 +32,7 @@ tunnel_output.txt
 
 # Tools
 tools/opa.exe
+policy/opa.exe
 
 # Python
 *.pyc
