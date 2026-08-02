@@ -96,6 +96,14 @@ export default function AgentDemoPage() {
     ]);
   };
 
+  const refreshCredit = () => {
+    if (agentId) {
+      api.getCreditAccount(agentId)
+        .then((d) => setCreditInfo({ available: d.available_credit, limit: d.credit_limit }))
+        .catch(() => {});
+    }
+  };
+
   const runTask = async (task: Task) => {
     if (!agentId) {
       alert("Please select an agent first");
@@ -151,6 +159,7 @@ export default function AgentDemoPage() {
       addEvent("error", `Error: ${error}`);
     } finally {
       setIsRunning(false);
+      refreshCredit();
     }
   };
 

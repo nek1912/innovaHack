@@ -69,6 +69,7 @@ class AgentService:
         session: AsyncSession,
         payee_id: str | None = None,
         task_amount_paise: int | None = None,
+        simulate: bool = False,
     ) -> dict:
         result = await session.execute(select(Agent).where(Agent.id == agent_id))
         agent = result.scalar_one_or_none()
@@ -143,6 +144,7 @@ class AgentService:
                             mode=params.get("mode", "upi"),
                             purpose=params.get("purpose", task_description),
                             task_id=task_id,
+                            simulate=simulate,
                         )
                         parsed["payout_result"] = payout_result
                         parsed["message"] = f"Payout created: {payout_result.get('status', 'unknown')}"
@@ -191,8 +193,12 @@ async def execute_payout_direct(
     mode: str,
     purpose: str,
     task_id: str,
+    simulate: bool = False,
 ) -> dict:
-    """Create a payout record directly — same path as owner_request_payout so it appears in dashboard/audit."""
+    """Create a payout record directly — same path as owner_request_payout so it appears in dashboard/audit.
+
+    simulate=True skips RazorpayX calls and marks payout as "simulated" — for demo/testing only.
+    """
     payee_uuid = uuid.UUID(payee_id)
     payee = await db.get(Payee, payee_uuid)
     if not payee or payee.agent_id != agent.id:
@@ -245,7 +251,7 @@ async def execute_payout_direct(
         await db.commit()
         return {"id": str(payout.id), "status": "pending_approval", "policy_decision": "approval_required"}
 
-    # allow path — create payout and call RazorpayX
+    # allow path — create payout
     payout = Payout(
         agent_id=agent.id,
         payee_id=payee_uuid,
@@ -264,6 +270,19 @@ async def execute_payout_direct(
     credit_account = credit_result.scalar_one_or_none()
     if credit_account:
         await reserve_credit(credit_account_id=credit_account.id, amount=amount_paise, session=db)
+
+    if simulate:
+        # Skip RazorpayX — mark as simulated, commit spend immediately
+        if credit_account:
+            await commit_spend(credit_account_id=credit_account.id, payout_id=payout.id, amount=amount_paise, session=db)
+        payout.razorpay_status = "simulated"
+        await log_audit(
+            db, request_id, "payout_simulated",
+            detail={"payout_id": str(payout.id), "amount_paise": amount_paise, "task_id": task_id},
+            agent_id=agent.id,
+        )
+        await db.commit()
+        return {"id": str(payout.id), "status": "simulated", "policy_decision": "allow"}
 
     try:
         await ensure_payee_provider_ids(db, payee)
