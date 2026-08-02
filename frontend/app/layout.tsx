@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClientProviders } from "@/components/ClientProviders";
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
 export const metadata: Metadata = {
-  title: "AgentFinance Control System",
-  description: "Mission control for autonomous financial agents",
+  title: "AgentFinance",
+  description: "Control your autonomous financial agents",
 };
 
 export default function RootLayout({
@@ -13,8 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
-      <body className="min-h-full bg-background text-foreground">
+    <html lang="en" className={`h-full ${inter.variable}`}>
+      <body className="min-h-full bg-canvas text-ink">
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
