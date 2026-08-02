@@ -10,7 +10,7 @@ import { Input, Select } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableEmpty } from "@/components/ui/Table";
 import { useToast } from "@/components/Toast";
-import { ArrowLeft, Plus, Lock, Unlock, Wallet, Clock, Power, Send } from "lucide-react";
+import { ArrowLeft, Plus, Lock, Unlock, Wallet, Clock, Power, Send, CreditCard } from "lucide-react";
 import Link from "next/link";
 
 function formatPaise(paise: number) {
@@ -34,6 +34,8 @@ export default function AgentDetailPage() {
   const [showAddPayee, setShowAddPayee] = useState(false);
   const [showRequestPayout, setShowRequestPayout] = useState(false);
   const [showFreezeConfirm, setShowFreezeConfirm] = useState(false);
+  const [showIssueCredit, setShowIssueCredit] = useState(false);
+  const [creditLoading, setCreditLoading] = useState(false);
   const [payeeForm, setPayeeForm] = useState({ label: "", vpa: "", bank_account_number: "", bank_ifsc: "" });
   const [payoutForm, setPayoutForm] = useState({ payee_id: "", amount_paise: 1000, mode: "upi", purpose: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -65,6 +67,19 @@ export default function AgentDetailPage() {
       setAgent({ ...agent, status: agent.status === "frozen" ? "active" : "frozen" });
     } catch { toast("error", "Failed to update agent status"); }
     setShowFreezeConfirm(false);
+  };
+
+  const handleIssueCredit = async () => {
+    setCreditLoading(true);
+    try {
+      await api.issueCredit(agentId);
+      toast("success", "Credit issued successfully");
+      setShowIssueCredit(false);
+      window.location.reload();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to issue credit";
+      toast("error", msg);
+    } finally { setCreditLoading(false); }
   };
 
   const handleAddPayee = async (e: React.FormEvent) => {
@@ -147,6 +162,9 @@ export default function AgentDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button onClick={() => setShowIssueCredit(true)}>
+            <CreditCard size={16} /> Issue Credit
+          </Button>
           <Button onClick={() => setShowRequestPayout(true)} disabled={agent.status === "frozen" || payees.length === 0}>
             <Send size={16} /> Request payout
           </Button>
@@ -166,6 +184,18 @@ export default function AgentDetailPage() {
           <Button variant="ghost" onClick={() => setShowFreezeConfirm(false)}>Cancel</Button>
           <Button variant={agent.status === "frozen" ? "success" : "danger"} onClick={handleToggleFreeze}>
             {agent.status === "frozen" ? "Unfreeze" : "Freeze"}
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal open={showIssueCredit} onClose={() => setShowIssueCredit(false)} title="Issue Credit">
+        <p className="text-sm text-text-secondary mb-4">
+          This will run underwriting and issue credit to "{agent.name}". The credit limit will be determined by the underwriting score.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setShowIssueCredit(false)}>Cancel</Button>
+          <Button onClick={handleIssueCredit} disabled={creditLoading}>
+            {creditLoading ? "Issuing..." : "Issue Credit"}
           </Button>
         </div>
       </Modal>

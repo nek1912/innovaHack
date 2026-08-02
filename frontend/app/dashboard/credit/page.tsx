@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { api, CreditDashboardData, CreditRiskData } from "@/lib/api";
+import { api, CreditDashboardData, CreditRiskData, CreditAccountDetail } from "@/lib/api";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableEmpty } from "@/components/ui/Table";
-import { Shield, AlertTriangle } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/Toast";
+import { Shield, AlertTriangle, CreditCard } from "lucide-react";
 
 function formatPaise(paise: number) {
   return `₹${(paise / 100).toLocaleString("en-IN")}`;
@@ -124,20 +127,41 @@ function AgentRiskTable({ agents }: { agents: CreditRiskData["agents"] }) {
 }
 
 export default function CreditDashboardPage() {
+  const { toast } = useToast();
   const [credit, setCredit] = useState<CreditDashboardData | null>(null);
   const [risk, setRisk] = useState<CreditRiskData | null>(null);
+  const [accounts, setAccounts] = useState<CreditAccountDetail[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showIssueCredit, setShowIssueCredit] = useState<string | null>(null);
+  const [creditLoading, setCreditLoading] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem("token")) { window.location.href = "/login"; return; }
     Promise.all([
       api.getCreditDashboard().catch(() => null),
       api.getCreditRisk().catch(() => null),
-    ]).then(([c, r]) => {
+      api.listCreditAccounts().catch(() => ({ accounts: [] })),
+    ]).then(([c, r, acc]) => {
       setCredit(c);
       setRisk(r);
+      setAccounts(acc?.accounts ?? []);
     }).finally(() => setLoading(false));
   }, []);
+
+  const handleIssueCredit = async () => {
+    if (!showIssueCredit) return;
+    setCreditLoading(true);
+    try {
+      await api.issueCredit(showIssueCredit);
+      toast("success", "Credit issued successfully");
+      setShowIssueCredit(null);
+      const acc = await api.listCreditAccounts();
+      setAccounts(acc.accounts);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to issue credit";
+      toast("error", msg);
+    } finally { setCreditLoading(false); }
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="text-sm text-text-muted">Loading credit dashboard...</div></div>;
@@ -162,6 +186,63 @@ export default function CreditDashboardPage() {
       {credit && <CreditSummary data={credit} />}
       {risk && <RiskOverview risk={risk} />}
       {risk && <AgentRiskTable agents={risk.agents} />}
+
+      {risk && risk.agents.length > 0 && (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Agent credit status</CardTitle>
+          </CardHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Agent</TableHead>
+                <TableHead>Credit Status</TableHead>
+                <TableHead>Credit Limit</TableHead>
+                <TableHead>Available</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {risk.agents.map((a) => {
+                const acct = accounts.find((ac) => ac.agent_id === a.agent_id);
+                return (
+                  <TableRow key={a.agent_id}>
+                    <TableCell className="font-medium">{a.agent_name}</TableCell>
+                    <TableCell>
+                      {acct ? (
+                        <Badge variant={acct.status === "active" ? "green" : "red"}>{acct.status}</Badge>
+                      ) : (
+                        <Badge variant="amber">No credit</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono">{acct ? `₹${(acct.credit_limit / 100).toLocaleString("en-IN")}` : "-"}</TableCell>
+                    <TableCell className="font-mono">{acct ? `₹${(acct.available_credit / 100).toLocaleString("en-IN")}` : "-"}</TableCell>
+                    <TableCell>
+                      {!acct && (
+                        <Button size="sm" onClick={() => setShowIssueCredit(a.agent_id)}>
+                          <CreditCard size={14} /> Issue Credit
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
+
+      <Modal open={!!showIssueCredit} onClose={() => setShowIssueCredit(null)} title="Issue Credit">
+        <p className="text-sm text-text-secondary mb-4">
+          This will run underwriting and issue credit. The credit limit will be determined by the underwriting score.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setShowIssueCredit(null)}>Cancel</Button>
+          <Button onClick={handleIssueCredit} disabled={creditLoading}>
+            {creditLoading ? "Issuing..." : "Issue Credit"}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

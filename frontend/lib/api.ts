@@ -235,6 +235,9 @@ export const api = {
   getCreditDashboard: () =>
     request<CreditDashboardData>("/owner/credit/dashboard"),
 
+  listCreditAccounts: () =>
+    request<{ accounts: CreditAccountDetail[] }>("/owner/credit/accounts"),
+
   getCreditRisk: () =>
     request<CreditRiskData>("/owner/credit/risk"),
 
@@ -249,6 +252,12 @@ export const api = {
 
   unfreezeCredit: (agentId: string) =>
     request<{ status: string }>(`/owner/credit/unfreeze/${agentId}`, { method: "POST" }),
+
+  issueCredit: (agentId: string) =>
+    request<{ id: string; agent_id: string; credit_limit: number; available_credit: number; status: string }>("/credit/issue", {
+      method: "POST",
+      body: JSON.stringify({ agent_id: agentId }),
+    }),
 
   // Repayments
   getRepayments: (agentId: string) =>

@@ -130,6 +130,32 @@ async def credit_dashboard(
     }
 
 
+@router.get("/accounts")
+async def list_credit_accounts(
+    owner: Owner = Depends(get_current_owner),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all credit accounts for this owner."""
+    result = await db.execute(
+        select(CreditAccount).where(CreditAccount.owner_id == owner.id)
+    )
+    accounts = result.scalars().all()
+    return {
+        "accounts": [
+            {
+                "id": str(a.id),
+                "agent_id": str(a.agent_id),
+                "credit_limit": a.credit_limit,
+                "available_credit": a.available_credit,
+                "used_credit": a.used_credit,
+                "reserved_credit": a.reserved_credit,
+                "status": a.status,
+            }
+            for a in accounts
+        ]
+    }
+
+
 @router.get("/risk")
 async def risk_summary(
     owner: Owner = Depends(get_current_owner),
