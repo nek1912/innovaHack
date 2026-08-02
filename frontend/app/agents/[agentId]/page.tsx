@@ -14,7 +14,7 @@ import { ArrowLeft, Plus, Lock, Unlock, Wallet, CreditCard, Clock, Power, Send }
 import Link from "next/link";
 
 function formatPaise(paise: number) {
-  return `â‚¹${(paise / 100).toLocaleString("en-IN")}`;
+  return "?" + (paise / 100).toLocaleString("en-IN");
 }
 
 type Tab = "overview" | "payees" | "payouts" | "audit";
@@ -100,9 +100,9 @@ export default function AgentDetailPage() {
         purpose: payoutForm.purpose || undefined,
       });
       if (res.policy_decision === "approval_required") {
-        toast("info", "Payout requires approval â€” check dashboard");
+        toast("info", "Payout requires approval — check dashboard");
       } else {
-        toast("success", `Payout created: ${res.status}`);
+        toast("success", "Payout created: " + res.status);
       }
       setShowRequestPayout(false);
       setPayoutForm({ payee_id: "", amount_paise: 1000, mode: "upi", purpose: "" });
@@ -115,14 +115,14 @@ export default function AgentDetailPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="text-text-muted">Loading agent details...</div></div>;
+    return <div className="flex items-center justify-center h-64"><div className="text-sm text-text-muted">Loading agent details...</div></div>;
   }
 
   if (!agent) {
     return (
       <div className="text-center py-12">
         <p className="text-text-muted">Agent not found</p>
-        <Link href="/agents"><Button variant="ghost" className="mt-4">Back to Agents</Button></Link>
+        <Link href="/agents"><Button variant="ghost" className="mt-4">Back to agents</Button></Link>
       </div>
     );
   }
@@ -136,40 +136,33 @@ export default function AgentDetailPage() {
 
   return (
     <div>
-      <Link href="/agents" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-4">
-        <ArrowLeft size={16} /> Back to Agents
+      <Link href="/agents" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
+        <ArrowLeft size={16} /> Back to agents
       </Link>
 
-      {/* Agent Header */}
-      <Card className="mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-cyan/20 flex items-center justify-center text-cyan"><CreditCard size={24} /></div>
-            <div>
-              <h1 className="text-xl font-bold">{agent.name}</h1>
-              <div className="flex items-center gap-3 mt-1">
-                <Badge variant={getStatusVariant(agent.status)}>{agent.status}</Badge>
-                <span className="text-xs text-text-muted">ID: {agent.id.slice(0, 8)}...</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setShowRequestPayout(true)} disabled={agent.status === "frozen" || payees.length === 0}>
-              <Send size={16} /> Request Payout
-            </Button>
-            <Button variant={agent.status === "frozen" ? "success" : "danger"} onClick={() => setShowFreezeConfirm(true)}>
-              {agent.status === "frozen" ? <><Unlock size={16} /> Unfreeze</> : <><Lock size={16} /> Freeze</>}
-            </Button>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-normal text-text-primary">{agent.name}</h1>
+          <div className="flex items-center gap-3 mt-2">
+            <Badge variant={getStatusVariant(agent.status)}>{agent.status}</Badge>
+            <span className="text-xs text-text-muted font-mono">{agent.id.slice(0, 8)}...</span>
           </div>
         </div>
-      </Card>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowRequestPayout(true)} disabled={agent.status === "frozen" || payees.length === 0}>
+            <Send size={16} /> Request payout
+          </Button>
+          <Button variant={agent.status === "frozen" ? "success" : "danger"} onClick={() => setShowFreezeConfirm(true)}>
+            {agent.status === "frozen" ? <><Unlock size={16} /> Unfreeze</> : <><Lock size={16} /> Freeze</>}
+          </Button>
+        </div>
+      </div>
 
-      {/* Freeze Confirm Modal */}
-      <Modal open={showFreezeConfirm} onClose={() => setShowFreezeConfirm(false)} title={agent.status === "frozen" ? "Unfreeze Agent?" : "Freeze Agent?"}>
+      <Modal open={showFreezeConfirm} onClose={() => setShowFreezeConfirm(false)} title={agent.status === "frozen" ? "Unfreeze agent?" : "Freeze agent?"}>
         <p className="text-sm text-text-secondary mb-4">
           {agent.status === "frozen"
-            ? `Unfreeze "${agent.name}"? Agent will be able to request payouts again.`
-            : `Freeze "${agent.name}"? All payout requests will be blocked immediately.`}
+            ? "Unfreeze \"" + agent.name + "\"? Agent will be able to request payouts again."
+            : "Freeze \"" + agent.name + "\"? All payout requests will be blocked immediately."}
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setShowFreezeConfirm(false)}>Cancel</Button>
@@ -179,14 +172,13 @@ export default function AgentDetailPage() {
         </div>
       </Modal>
 
-      {/* Request Payout Modal */}
-      <Modal open={showRequestPayout} onClose={() => setShowRequestPayout(false)} title="Request Payout">
+      <Modal open={showRequestPayout} onClose={() => setShowRequestPayout(false)} title="Request payout">
         <form onSubmit={handleRequestPayout} className="space-y-4">
           <Select
             label="Payee"
             value={payoutForm.payee_id}
             onChange={(e) => setPayoutForm({ ...payoutForm, payee_id: e.target.value })}
-            options={[{ value: "", label: "Select payee" }, ...payees.filter((p) => p.active).map((p) => ({ value: p.id, label: `${p.label} (${p.vpa || p.bank_account_number})` }))]}
+            options={[{ value: "", label: "Select payee" }, ...payees.filter((p) => p.active).map((p) => ({ value: p.id, label: p.label + " (" + (p.vpa || p.bank_account_number) + ")" }))]}
             required
           />
           <Input
@@ -197,9 +189,9 @@ export default function AgentDetailPage() {
             onChange={(e) => setPayoutForm({ ...payoutForm, amount_paise: +e.target.value })}
             required
           />
-          <div className="bg-elevated rounded-lg p-3 text-sm">
+          <div className="bg-surface-warm rounded-[10px] p-3 text-sm border border-border-cool">
             <p className="text-text-muted">Amount: <span className="text-text-primary font-medium">{formatPaise(payoutForm.amount_paise)}</span></p>
-            <p className="text-text-muted mt-1">Per-tx cap: {formatPaise(agent.per_tx_cap_paise)} | Approval threshold: {formatPaise(agent.approval_threshold_paise)}</p>
+            <p className="text-text-muted mt-1">Per-tx cap: {formatPaise(agent.per_tx_cap_paise)} · Approval threshold: {formatPaise(agent.approval_threshold_paise)}</p>
           </div>
           <Select
             label="Mode"
@@ -216,63 +208,62 @@ export default function AgentDetailPage() {
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => setShowRequestPayout(false)}>Cancel</Button>
             <Button type="submit" disabled={submitting || !payoutForm.payee_id}>
-              {submitting ? "Processing..." : "Submit Request"}
+              {submitting ? "Processing..." : "Submit request"}
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Cap Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center text-cyan"><Wallet size={20} /></div>
-            <div>
-              <p className="text-xs text-text-muted">Per Tx Cap</p>
-              <p className="text-lg font-bold">{formatPaise(agent.per_tx_cap_paise)}</p>
-            </div>
+      <Modal open={showAddPayee} onClose={() => setShowAddPayee(false)} title="Add payee">
+        <form onSubmit={handleAddPayee} className="space-y-4">
+          <Input label="Label" placeholder="e.g. Freelancer" value={payeeForm.label} onChange={(e) => setPayeeForm({ ...payeeForm, label: e.target.value })} required />
+          <Input label="VPA (UPI)" placeholder="user@upi" value={payeeForm.vpa} onChange={(e) => setPayeeForm({ ...payeeForm, vpa: e.target.value })} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Bank account" value={payeeForm.bank_account_number} onChange={(e) => setPayeeForm({ ...payeeForm, bank_account_number: e.target.value })} />
+            <Input label="IFSC" value={payeeForm.bank_ifsc} onChange={(e) => setPayeeForm({ ...payeeForm, bank_ifsc: e.target.value })} />
           </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center text-green"><Wallet size={20} /></div>
-            <div>
-              <p className="text-xs text-text-muted">Daily Cap</p>
-              <p className="text-lg font-bold">{formatPaise(agent.daily_cap_paise)}</p>
-            </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setShowAddPayee(false)}>Cancel</Button>
+            <Button type="submit" disabled={submitting}>{submitting ? "Adding..." : "Add payee"}</Button>
           </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center text-amber"><Clock size={20} /></div>
-            <div>
-              <p className="text-xs text-text-muted">Approval Threshold</p>
-              <p className="text-lg font-bold">{formatPaise(agent.approval_threshold_paise)}</p>
-            </div>
+        </form>
+      </Modal>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        {[
+          { label: "Per Tx Cap", value: formatPaise(agent.per_tx_cap_paise), icon: Wallet },
+          { label: "Daily Cap", value: formatPaise(agent.daily_cap_paise), icon: Wallet },
+          { label: "Approval Threshold", value: formatPaise(agent.approval_threshold_paise), icon: Clock },
+        ].map((s) => (
+          <div key={s.label} className="bg-surface-warm border border-border-cool rounded-[10px] p-4">
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted mb-1">{s.label}</p>
+            <p className="text-lg font-medium text-text-primary">{s.value}</p>
           </div>
-        </Card>
+        ))}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-border mb-6">
+      <div className="flex gap-0 border-b border-border-cool mb-6">
         {tabs.map((tab) => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === tab.id ? "text-cyan border-b-2 border-cyan" : "text-text-muted hover:text-text-primary"}`}>
+            className={`px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+              activeTab === tab.id
+                ? "text-text-primary border-b-2 border-text-primary"
+                : "text-text-muted hover:text-text-primary"
+            }`}>
             {tab.label}
-            {tab.count !== undefined && <span className="ml-2 text-xs bg-elevated px-1.5 py-0.5 rounded">{tab.count}</span>}
+            {tab.count !== undefined && <span className="ml-2 text-xs bg-surface-warm px-1.5 py-0.5 rounded-full">{tab.count}</span>}
           </button>
         ))}
       </div>
 
-      {/* Tab Content */}
       {activeTab === "overview" && (
         <Card>
-          <CardHeader><CardTitle>Agent Overview</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Agent overview</CardTitle></CardHeader>
           <div className="grid grid-cols-2 gap-4">
             <div><p className="text-xs text-text-muted mb-1">Status</p><Badge variant={getStatusVariant(agent.status)}>{agent.status}</Badge></div>
-            <div><p className="text-xs text-text-muted mb-1">Registered Payees</p><p className="text-lg font-bold">{payees.length}</p></div>
-            <div><p className="text-xs text-text-muted mb-1">Total Payouts</p><p className="text-lg font-bold">{payouts.length}</p></div>
-            <div><p className="text-xs text-text-muted mb-1">Audit Events</p><p className="text-lg font-bold">{auditEntries.length}</p></div>
+            <div><p className="text-xs text-text-muted mb-1">Registered payees</p><p className="text-lg font-medium">{payees.length}</p></div>
+            <div><p className="text-xs text-text-muted mb-1">Total payouts</p><p className="text-lg font-medium">{payouts.length}</p></div>
+            <div><p className="text-xs text-text-muted mb-1">Audit events</p><p className="text-lg font-medium">{auditEntries.length}</p></div>
           </div>
         </Card>
       )}
@@ -280,25 +271,11 @@ export default function AgentDetailPage() {
       {activeTab === "payees" && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-semibold text-text-secondary">Payee Network</h3>
-            <Button size="sm" onClick={() => setShowAddPayee(true)}><Plus size={14} /> Add Payee</Button>
+            <h3 className="text-sm font-medium text-text-secondary">Payee network</h3>
+            <Button size="sm" onClick={() => setShowAddPayee(true)}><Plus size={14} /> Add payee</Button>
           </div>
-          <Modal open={showAddPayee} onClose={() => setShowAddPayee(false)} title="Add Payee">
-            <form onSubmit={handleAddPayee} className="space-y-4">
-              <Input label="Label" placeholder="e.g. Freelancer" value={payeeForm.label} onChange={(e) => setPayeeForm({ ...payeeForm, label: e.target.value })} required />
-              <Input label="VPA (UPI)" placeholder="user@upi" value={payeeForm.vpa} onChange={(e) => setPayeeForm({ ...payeeForm, vpa: e.target.value })} />
-              <div className="grid grid-cols-2 gap-3">
-                <Input label="Bank Account" value={payeeForm.bank_account_number} onChange={(e) => setPayeeForm({ ...payeeForm, bank_account_number: e.target.value })} />
-                <Input label="IFSC" value={payeeForm.bank_ifsc} onChange={(e) => setPayeeForm({ ...payeeForm, bank_ifsc: e.target.value })} />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="ghost" onClick={() => setShowAddPayee(false)}>Cancel</Button>
-                <Button type="submit" disabled={submitting}>{submitting ? "Adding..." : "Add Payee"}</Button>
-              </div>
-            </form>
-          </Modal>
           <Table>
-            <TableHeader><TableRow><TableHead>Label</TableHead><TableHead>VPA</TableHead><TableHead>Bank Account</TableHead><TableHead>Status</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Label</TableHead><TableHead>VPA</TableHead><TableHead>Bank account</TableHead><TableHead>Status</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
             <TableBody>
               {payees.length === 0 ? (
                 <TableEmpty colSpan={5} message="No payees yet. Add your first payee." />
@@ -306,12 +283,12 @@ export default function AgentDetailPage() {
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.label}</TableCell>
                   <TableCell className="text-text-secondary">{p.vpa || "-"}</TableCell>
-                  <TableCell className="text-text-secondary">{p.bank_account_number ? `${p.bank_account_number.slice(0, 4)}****` : "-"}</TableCell>
+                  <TableCell className="text-text-secondary">{p.bank_account_number ? p.bank_account_number.slice(0, 4) + "****" : "-"}</TableCell>
                   <TableCell><Badge variant={p.active ? "green" : "red"}>{p.active ? "Active" : "Inactive"}</Badge></TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" onClick={async () => {
                       await api.setPayeeActive(agentId, p.id, !p.active);
-                      toast("success", `Payee ${p.active ? "deactivated" : "activated"}`);
+                      toast("success", "Payee " + (p.active ? "deactivated" : "activated"));
                       const res = await api.listAgentPayees(agentId);
                       setPayees(res.payees);
                     }}><Power size={14} /></Button>
@@ -330,7 +307,7 @@ export default function AgentDetailPage() {
             {payouts.length === 0 ? <TableEmpty colSpan={6} message="No payouts yet" /> : payouts.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.payee_label}</TableCell>
-                <TableCell>{formatPaise(p.amount_paise)}</TableCell>
+                <TableCell className="font-mono">{formatPaise(p.amount_paise)}</TableCell>
                 <TableCell className="uppercase text-xs">{p.mode}</TableCell>
                 <TableCell><Badge variant={getStatusVariant(p.policy_decision)}>{p.policy_decision}</Badge></TableCell>
                 <TableCell className="text-xs text-text-muted">{p.razorpay_status || "-"}</TableCell>

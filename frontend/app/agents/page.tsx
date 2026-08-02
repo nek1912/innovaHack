@@ -60,25 +60,25 @@ export default function AgentsPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="text-text-muted">Loading agents...</div></div>;
+    return <div className="flex items-center justify-center h-64"><div className="text-sm text-text-muted">Loading agents...</div></div>;
   }
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Agent Management</h1>
-          <p className="text-sm text-text-muted">Manage your autonomous financial agents</p>
+          <h1 className="text-3xl font-normal text-text-primary">Agents</h1>
+          <p className="text-sm text-text-muted mt-1">Manage your autonomous financial agents</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}><Plus size={16} /> Create New Agent</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus size={16} /> Create agent</Button>
       </div>
 
-      {/* API Key Display Modal */}
-      <Modal open={!!showApiKey} onClose={() => setShowApiKey(null)} title="Agent Created">
+      {/* API Key Modal */}
+      <Modal open={!!showApiKey} onClose={() => setShowApiKey(null)} title="Agent created">
         <div className="space-y-4">
-          <div className="bg-elevated rounded-lg p-4">
+          <div className="bg-surface-warm rounded-[10px] p-4 border border-border-cool">
             <p className="text-sm text-text-muted mb-2">Save this API key — it won&apos;t be shown again:</p>
-            <code className="block bg-background rounded px-3 py-2 text-sm font-mono break-all">{showApiKey}</code>
+            <code className="block bg-canvas rounded-md px-3 py-2 text-sm font-mono break-all text-text-primary border border-border-cool">{showApiKey}</code>
           </div>
           <div className="flex justify-end">
             <Button onClick={() => setShowApiKey(null)}>I&apos;ve saved it</Button>
@@ -86,10 +86,10 @@ export default function AgentsPage() {
         </div>
       </Modal>
 
-      {/* Create Agent Modal */}
-      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Create New Agent">
+      {/* Create Modal */}
+      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Create new agent">
         <form onSubmit={handleCreate} className="space-y-4">
-          <Input label="Agent Name" placeholder="e.g. MarketingAI" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <Input label="Agent name" placeholder="e.g. MarketingAI" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           <div className="grid grid-cols-3 gap-3">
             <Input label="Per Tx Cap (paise)" type="number" value={form.per_tx_cap_paise} onChange={(e) => setForm({ ...form, per_tx_cap_paise: +e.target.value })} />
             <Input label="Daily Cap (paise)" type="number" value={form.daily_cap_paise} onChange={(e) => setForm({ ...form, daily_cap_paise: +e.target.value })} />
@@ -97,12 +97,12 @@ export default function AgentsPage() {
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => setShowCreate(false)}>Cancel</Button>
-            <Button type="submit" disabled={creating}>{creating ? "Creating..." : "Create Agent"}</Button>
+            <Button type="submit" disabled={creating}>{creating ? "Creating..." : "Create agent"}</Button>
           </div>
         </form>
       </Modal>
 
-      <Card padding={false} className="overflow-x-auto">
+      <Card padding={false}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -111,7 +111,7 @@ export default function AgentsPage() {
               <TableHead className="text-right">Per Tx Cap</TableHead>
               <TableHead className="text-right">Daily Cap</TableHead>
               <TableHead className="text-right">Approval At</TableHead>
-              <TableHead className="center">Actions</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -120,14 +120,14 @@ export default function AgentsPage() {
             ) : agents.map((a) => (
               <TableRow key={a.id}>
                 <TableCell>
-                  <Link href={`/agents/${a.id}`} className="font-medium hover:text-cyan transition-colors">{a.name}</Link>
+                  <Link href={`/agents/${a.id}`} className="font-medium text-text-primary hover:underline">{a.name}</Link>
                 </TableCell>
                 <TableCell><Badge variant={getStatusVariant(a.status)}>{a.status}</Badge></TableCell>
-                <TableCell className="text-right">{formatPaise(a.per_tx_cap_paise)}</TableCell>
-                <TableCell className="text-right">{formatPaise(a.daily_cap_paise)}</TableCell>
-                <TableCell className="text-right">{formatPaise(a.approval_threshold_paise)}</TableCell>
+                <TableCell className="text-right font-mono">{formatPaise(a.per_tx_cap_paise)}</TableCell>
+                <TableCell className="text-right font-mono">{formatPaise(a.daily_cap_paise)}</TableCell>
+                <TableCell className="text-right font-mono">{formatPaise(a.approval_threshold_paise)}</TableCell>
                 <TableCell>
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center gap-2">
                     <Link href={`/agents/${a.id}`}><Button variant="ghost" size="sm"><Shield size={14} /></Button></Link>
                     <Button variant={a.status === "frozen" ? "success" : "danger"} size="sm" onClick={() => toggleFreeze(a.id, a.status)}>
                       {a.status === "frozen" ? <><Unlock size={14} /> Unfreeze</> : <><Lock size={14} /> Freeze</>}
