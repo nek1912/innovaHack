@@ -7,8 +7,17 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.models.owner import Agent
-from app.models.credit import CreditAccount
+from app.models.owner import Agent, Payee, Payout
+from app.models.credit import CreditAccount, CreditTransaction
+from app.deps import log_audit
+from app.services.razorpayx import (
+    RazorpayXError,
+    ensure_payee_provider_ids,
+    razorpayx_client,
+)
+from app.services.policy_input import build_policy_input
+from app.services.opa_client import opa_client
+from app.services.credit_engine import reserve_credit, commit_spend, release_reservation
 
 AGENT_SYSTEM_PROMPT = """You are the Procurement Agent for Acme Robotics.
 
@@ -119,6 +128,26 @@ class AgentService:
                         "message": "Task analyzed",
                     }
 
+                # Execute payout if LLM requested it
+                if parsed.get("action") == "request_payout" and parsed.get("params"):
+                    params = parsed["params"]
+                    try:
+                        payout_result = await execute_payout_direct(
+                            db=session,
+                            agent=agent,
+                            payee_id=params.get("payee_id"),
+                            amount_paise=params.get("amount_paise", 10000),
+                            mode=params.get("mode", "upi"),
+                            purpose=params.get("purpose", task_description),
+                            task_id=task_id,
+                        )
+                        parsed["payout_result"] = payout_result
+                        parsed["message"] = f"Payout created: {payout_result.get('status', 'unknown')}"
+                        parsed["status"] = "completed"
+                    except Exception as e:
+                        parsed["message"] = f"Payout failed: {str(e)}"
+                        parsed["status"] = "error"
+
                 return {
                     "task_id": task_id,
                     "thinking": parsed.get("thinking", ""),
@@ -138,6 +167,124 @@ class AgentService:
                 "message": f"Agent error: {str(e)}",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
+
+
+async def execute_payout_direct(
+    db: AsyncSession,
+    agent: Agent,
+    payee_id: str,
+    amount_paise: int,
+    mode: str,
+    purpose: str,
+    task_id: str,
+) -> dict:
+    """Create a payout record directly — same path as owner_request_payout so it appears in dashboard/audit."""
+    payee_uuid = uuid.UUID(payee_id)
+    payee = await db.get(Payee, payee_uuid)
+    if not payee or payee.agent_id != agent.id:
+        raise ValueError("payee_not_found")
+    if not payee.active:
+        raise ValueError("payee_inactive")
+
+    request_id = uuid.uuid4()
+
+    # Build policy input and evaluate
+    try:
+        policy_input = await build_policy_input(db, agent.id, payee_uuid, amount_paise)
+    except ValueError as e:
+        raise ValueError(str(e))
+
+    try:
+        decision = await opa_client.evaluate(policy_input)
+    except Exception:
+        raise ValueError("policy_service_unavailable")
+
+    allow = decision.get("allow", False)
+    requires_approval = decision.get("requires_approval", False)
+    deny_reason = decision.get("deny_reason")
+
+    if not allow and not requires_approval:
+        await log_audit(
+            db, request_id, "policy_denied",
+            detail={"reason": deny_reason, "amount_paise": amount_paise},
+            agent_id=agent.id,
+        )
+        raise ValueError(deny_reason or "denied")
+
+    if requires_approval:
+        payout = Payout(
+            agent_id=agent.id,
+            payee_id=payee_uuid,
+            amount_paise=amount_paise,
+            mode=mode,
+            purpose=purpose,
+            policy_decision="approval_required",
+            policy_reason="above_approval_threshold",
+        )
+        db.add(payout)
+        await db.flush()
+        await log_audit(
+            db, request_id, "approval_required",
+            detail={"payout_id": str(payout.id), "amount_paise": amount_paise},
+            agent_id=agent.id,
+        )
+        await db.commit()
+        return {"id": str(payout.id), "status": "pending_approval", "policy_decision": "approval_required"}
+
+    # allow path — create payout and call RazorpayX
+    payout = Payout(
+        agent_id=agent.id,
+        payee_id=payee_uuid,
+        amount_paise=amount_paise,
+        mode=mode,
+        purpose=purpose,
+        policy_decision="allow",
+    )
+    db.add(payout)
+    await db.flush()
+
+    # Reserve credit
+    credit_result = await db.execute(
+        select(CreditAccount).where(CreditAccount.agent_id == agent.id)
+    )
+    credit_account = credit_result.scalar_one_or_none()
+    if credit_account:
+        await reserve_credit(credit_account_id=credit_account.id, amount=amount_paise, session=db)
+
+    try:
+        await ensure_payee_provider_ids(db, payee)
+        result = await razorpayx_client.create_payout(
+            fund_account_id=payee.razorpay_fund_account_id,
+            amount_paise=amount_paise,
+            mode=mode,
+            purpose=purpose or "payout",
+            idempotency_key=str(payout.id),
+            narration=f"AFCS {str(payout.id)[:8]}",
+        )
+    except RazorpayXError as e:
+        if credit_account:
+            await release_reservation(credit_account_id=credit_account.id, amount=amount_paise, session=db)
+        payout.razorpay_status = "local_error"
+        await log_audit(
+            db, request_id, "provider_failure",
+            detail={"payout_id": str(payout.id), "error": str(e)},
+            agent_id=agent.id,
+        )
+        await db.commit()
+        raise ValueError(f"provider_error: {e.error_code}")
+
+    if credit_account:
+        await commit_spend(credit_account_id=credit_account.id, payout_id=payout.id, amount=amount_paise, session=db)
+
+    payout.razorpay_payout_id = result.get("id")
+    payout.razorpay_status = result.get("status", "queued")
+    await log_audit(
+        db, request_id, "provider_payout_created",
+        detail={"payout_id": str(payout.id), "razorpay_payout_id": result.get("id"), "amount_paise": amount_paise},
+        agent_id=agent.id,
+    )
+    await db.commit()
+    return {"id": str(payout.id), "status": payout.razorpay_status or "queued", "policy_decision": "allow"}
 
 
 agent_service = AgentService()

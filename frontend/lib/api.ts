@@ -268,4 +268,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ repayment_id: repaymentId }),
     }),
+
+  adjustCredit: (agentId: string, amount: number, reason: string) =>
+    request<{ id: string; credit_limit: number; available_credit: number }>(`/owner/credit/adjust/${agentId}`, {
+      method: "POST",
+      body: JSON.stringify({ amount_paise: amount, reason }),
+    }),
 };

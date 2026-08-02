@@ -7,6 +7,7 @@ import { api, CreditAccountDetail, CreditTransaction } from "@/lib/api";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableEmpty } from "@/components/ui/Table";
 import { useToast } from "@/components/Toast";
 import { ArrowLeft, Lock, Unlock } from "lucide-react";
@@ -24,6 +25,7 @@ const TYPE_BADGE: Record<string, "green" | "amber" | "red" | "cyan" | "default">
   FREEZE: "red",
   UNFREEZE: "green",
   RELEASE: "cyan",
+  ADJUSTMENT: "cyan",
 };
 
 export default function CreditAccountDetailPage() {
@@ -35,6 +37,10 @@ export default function CreditAccountDetailPage() {
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [dataError, setDataError] = useState("");
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustReason, setAdjustReason] = useState("");
+  const [adjusting, setAdjusting] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem("token")) { window.location.href = "/login"; return; }
@@ -67,6 +73,24 @@ export default function CreditAccountDetailPage() {
     }
   };
 
+  const handleAdjust = async () => {
+    if (!adjustAmount) return;
+    setAdjusting(true);
+    try {
+      const amountPaise = Math.round(parseFloat(adjustAmount) * 100);
+      const result = await api.adjustCredit(agentId, amountPaise, adjustReason || "Manual adjustment");
+      setAccount({ ...account!, credit_limit: result.credit_limit, available_credit: result.available_credit });
+      setAdjustOpen(false);
+      setAdjustAmount("");
+      setAdjustReason("");
+      toast("success", "Credit adjusted");
+    } catch {
+      toast("error", "Failed to adjust credit");
+    } finally {
+      setAdjusting(false);
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="text-sm text-text-muted">Loading credit account...</div></div>;
   }
@@ -95,9 +119,12 @@ export default function CreditAccountDetailPage() {
             <span className="text-xs text-text-muted font-mono">Agent: {agentId.slice(0, 8)}...</span>
           </div>
         </div>
-        <Button variant={account.status === "active" ? "danger" : "success"} onClick={handleToggleFreeze}>
-          {account.status === "active" ? <><Lock size={16} /> Freeze</> : <><Unlock size={16} /> Unfreeze</>}
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="secondary" onClick={() => setAdjustOpen(true)}>Adjust Credit</Button>
+          <Button variant={account.status === "active" ? "danger" : "success"} onClick={handleToggleFreeze}>
+            {account.status === "active" ? <><Lock size={16} /> Freeze</> : <><Unlock size={16} /> Unfreeze</>}
+          </Button>
+        </div>
       </div>
 
       {dataError && (
@@ -161,6 +188,37 @@ export default function CreditAccountDetailPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <Modal open={adjustOpen} onClose={() => setAdjustOpen(false)} title="Adjust Credit">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-text-muted mb-1">Amount (₹)</label>
+            <input
+              type="number"
+              value={adjustAmount}
+              onChange={(e) => setAdjustAmount(e.target.value)}
+              placeholder="Positive to add, negative to remove"
+              className="w-full border border-border-warm rounded-[8px] px-3 py-2 text-sm bg-surface text-text-primary placeholder:text-text-muted/50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-text-muted mb-1">Reason</label>
+            <input
+              type="text"
+              value={adjustReason}
+              onChange={(e) => setAdjustReason(e.target.value)}
+              placeholder="Reason for adjustment"
+              className="w-full border border-border-warm rounded-[8px] px-3 py-2 text-sm bg-surface text-text-primary placeholder:text-text-muted/50"
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="ghost" onClick={() => setAdjustOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleAdjust} disabled={adjusting || !adjustAmount}>
+              {adjusting ? "Adjusting..." : "Apply"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -164,3 +166,46 @@ async def risk_summary(
     """Get risk summary for all agents."""
     risk_data = await calculate_risk(owner.id, db)
     return risk_data
+
+
+class CreditAdjustRequest(BaseModel):
+    amount_paise: int
+    reason: str = "Manual adjustment"
+
+
+@router.post("/adjust/{agent_id}")
+async def adjust_credit(
+    agent_id: uuid.UUID,
+    request: CreditAdjustRequest,
+    owner: Owner = Depends(get_current_owner),
+    db: AsyncSession = Depends(get_db),
+):
+    """Manually adjust credit (add or remove)."""
+    result = await db.execute(
+        select(CreditAccount).where(CreditAccount.agent_id == agent_id)
+    )
+    credit_account = result.scalar_one_or_none()
+    if not credit_account:
+        raise HTTPException(status_code=404, detail="Credit account not found")
+
+    credit_account.credit_limit += request.amount_paise
+    credit_account.available_credit += request.amount_paise
+    credit_account.updated_at = datetime.now(timezone.utc)
+
+    transaction = CreditTransaction(
+        id=uuid.uuid4(),
+        credit_account_id=credit_account.id,
+        payout_id=None,
+        type="ADJUSTMENT",
+        amount=request.amount_paise,
+        balance_after=credit_account.available_credit,
+        reason=request.reason,
+    )
+    db.add(transaction)
+    await db.commit()
+
+    return {
+        "id": str(credit_account.id),
+        "credit_limit": credit_account.credit_limit,
+        "available_credit": credit_account.available_credit,
+    }
