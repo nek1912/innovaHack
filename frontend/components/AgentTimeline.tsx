@@ -20,6 +20,29 @@ const eventStyles = {
   result: { bg: "bg-green/10", dot: "bg-green" },
 };
 
+function formatDetailValue(value: unknown): string {
+  if (typeof value === "number") return `₹${(value / 100).toLocaleString("en-IN")}`;
+  if (typeof value === "string") return value.length > 60 ? value.slice(0, 60) + "..." : value;
+  return String(value);
+}
+
+function formatTimelineDetails(details: Record<string, unknown>): string[] {
+  const parts: string[] = [];
+  if (details.payee_id) parts.push(`Payee: ${String(details.payee_id).slice(0, 8)}...`);
+  if (typeof details.amount_paise === "number") parts.push(`Amount: ₹${(details.amount_paise / 100).toLocaleString("en-IN")}`);
+  if (details.mode) parts.push(`Mode: ${String(details.mode).toUpperCase()}`);
+  if (details.purpose) parts.push(`Purpose: ${formatDetailValue(details.purpose)}`);
+  if (details.status) parts.push(`Status: ${String(details.status)}`);
+  if (details.payout_id) parts.push(`Payout: ${String(details.payout_id).slice(0, 8)}...`);
+  if (details.razorpay_payout_id) parts.push(`Provider ID: ${String(details.razorpay_payout_id).slice(0, 12)}...`);
+  if (details.provider_status) parts.push(`Provider status: ${String(details.provider_status)}`);
+  if (details.provider_error_code) parts.push(`Error: ${details.provider_error_code}`);
+  if (details.description) parts.push(String(details.description));
+  if (details.error) parts.push(`Error: ${formatDetailValue(details.error)}`);
+  if (details.message) parts.push(String(details.message));
+  return parts.length > 0 ? parts : ["No details"];
+}
+
 export function AgentTimeline({ events, isRunning }: AgentTimelineProps) {
   return (
     <div className="border border-border rounded-lg p-4 bg-surface">
@@ -41,6 +64,7 @@ export function AgentTimeline({ events, isRunning }: AgentTimelineProps) {
         ) : (
           events.map((event) => {
             const style = eventStyles[event.type];
+            const detailParts = event.details ? formatTimelineDetails(event.details) : [];
             return (
               <div
                 key={event.id}
@@ -49,10 +73,12 @@ export function AgentTimeline({ events, isRunning }: AgentTimelineProps) {
                 <div className={`mt-1 w-2 h-2 rounded-full ${style.dot}`} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm">{event.message}</p>
-                  {event.details && (
-                    <pre className="mt-2 text-xs text-text-muted overflow-x-auto">
-                      {JSON.stringify(event.details, null, 2)}
-                    </pre>
+                  {detailParts.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {detailParts.map((part, i) => (
+                        <span key={i} className="text-xs bg-surface-warm px-2 py-0.5 rounded text-text-muted">{part}</span>
+                      ))}
+                    </div>
                   )}
                 </div>
                 <span className="text-xs text-text-muted whitespace-nowrap">

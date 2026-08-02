@@ -17,6 +17,19 @@ function formatPaise(paise: number) {
   return `₹${(paise / 100).toLocaleString("en-IN")}`;
 }
 
+function formatAuditDetail(detail: Record<string, unknown> | null): string {
+  if (!detail) return "-";
+  if (detail.reason) return String(detail.reason);
+  if (detail.message) return String(detail.message);
+  const parts: string[] = [];
+  if (detail.payout_id) parts.push(`Payout: ${String(detail.payout_id).slice(0, 8)}...`);
+  if (typeof detail.amount_paise === "number") parts.push(`Amount: ${formatPaise(detail.amount_paise)}`);
+  if (detail.razorpay_payout_id) parts.push(`Provider: ${String(detail.razorpay_payout_id).slice(0, 12)}...`);
+  if (detail.provider_error_code) parts.push(`Error: ${detail.provider_error_code}`);
+  if (detail.description) parts.push(String(detail.description));
+  return parts.length > 0 ? parts.join(" · ") : "No details";
+}
+
 type Tab = "overview" | "payees" | "payouts" | "audit";
 
 export default function AgentDetailPage() {
@@ -371,7 +384,7 @@ export default function AgentDetailPage() {
               <TableRow key={e.id}>
                 <TableCell className="text-text-muted text-xs">{new Date(e.created_at).toLocaleString()}</TableCell>
                 <TableCell><Badge variant={getStatusVariant(e.event_type)}>{e.event_type}</Badge></TableCell>
-                <TableCell className="text-xs max-w-[300px] truncate">{e.detail ? JSON.stringify(e.detail) : "-"}</TableCell>
+                <TableCell className="text-xs max-w-[300px] truncate">{e.detail ? formatAuditDetail(e.detail) : "-"}</TableCell>
               </TableRow>
             ))}
           </TableBody>

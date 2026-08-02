@@ -153,8 +153,19 @@ export default function AuditPage() {
                               Amount: ₹{(e.detail.amount_paise / 100).toLocaleString("en-IN")}
                             </span>
                           )}
+                          {typeof e.detail.provider_error_code === "string" && (
+                            <span className="text-danger">Provider error: {e.detail.provider_error_code}</span>
+                          )}
+                          {typeof e.detail.description === "string" && (
+                            <span className="text-text-muted">{e.detail.description}</span>
+                          )}
+                          {typeof e.detail.razorpay_payout_id === "string" && (
+                            <span className="text-text-muted">Provider ID: {e.detail.razorpay_payout_id.slice(0, 12)}...</span>
+                          )}
                           {!e.detail.reason && !e.detail.payout_id && !e.detail.amount_paise && (
-                            <span>{JSON.stringify(e.detail)}</span>
+                            <span className="text-text-muted">
+                              {e.detail.message ? String(e.detail.message) : e.detail.description ? String(e.detail.description) : "No details"}
+                            </span>
                           )}
                         </div>
                       ) : (

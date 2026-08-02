@@ -13,6 +13,19 @@ function formatPaise(paise: number) {
   return `₹${(paise / 100).toLocaleString("en-IN")}`;
 }
 
+function formatAuditDetail(detail: Record<string, unknown> | null): string {
+  if (!detail) return "-";
+  if (detail.reason) return String(detail.reason);
+  if (detail.message) return String(detail.message);
+  const parts: string[] = [];
+  if (detail.payout_id) parts.push(`Payout: ${String(detail.payout_id).slice(0, 8)}...`);
+  if (typeof detail.amount_paise === "number") parts.push(`Amount: ${formatPaise(detail.amount_paise)}`);
+  if (detail.razorpay_payout_id) parts.push(`Provider: ${String(detail.razorpay_payout_id).slice(0, 12)}...`);
+  if (detail.provider_error_code) parts.push(`Error: ${detail.provider_error_code}`);
+  if (detail.description) parts.push(String(detail.description));
+  return parts.length > 0 ? parts.join(" · ") : "No details";
+}
+
 function SpendBar({ stats }: { stats: DashboardStats }) {
   const limit = stats.today_limit_paise || 1;
   const pct = Math.min((stats.today_spend_paise / limit) * 100, 100);
@@ -79,7 +92,7 @@ function HealthCards({ stats }: { stats: DashboardStats }) {
   );
 }
 
-function ApprovalQueue({ payouts, onApprove, onReject }: { payouts: PayoutDetail[]; onApprove: (id: string) => void; onReject: (id: string) => void }) {
+function ApprovalQueue({ payouts, onApprove, onReject, processingId }: { payouts: PayoutDetail[]; onApprove: (id: string) => void; onReject: (id: string) => void; processingId: string | null }) {
   return (
     <Card className="h-full">
       <CardHeader>
@@ -105,8 +118,8 @@ function ApprovalQueue({ payouts, onApprove, onReject }: { payouts: PayoutDetail
                   <p className="text-xs text-text-muted">{p.policy_reason || "Above threshold"}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="danger" size="sm" onClick={() => onReject(p.id)}>Reject</Button>
-                  <Button variant="success" size="sm" onClick={() => onApprove(p.id)}>Approve</Button>
+                  <Button variant="danger" size="sm" disabled={processingId === p.id} onClick={() => onReject(p.id)}>Reject</Button>
+                  <Button variant="success" size="sm" disabled={processingId === p.id} onClick={() => onApprove(p.id)}>{processingId === p.id ? "Processing..." : "Approve"}</Button>
                 </div>
               </div>
             </div>
@@ -198,7 +211,7 @@ function AuditPreview({ entries }: { entries: AuditEntry[] }) {
                   {e.agent_id ? e.agent_id.slice(0, 8) + "..." : "-"}
                 </TableCell>
                 <TableCell className="text-xs max-w-[200px] truncate">
-                  {e.detail ? JSON.stringify(e.detail) : "-"}
+                  {e.detail ? formatAuditDetail(e.detail) : "-"}
                 </TableCell>
               </TableRow>
             ))
@@ -216,6 +229,7 @@ export default function DashboardPage() {
   const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [dataError, setDataError] = useState("");
+  const [processingId, setProcessingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadData = () => {
@@ -243,23 +257,31 @@ export default function DashboardPage() {
   }, []);
 
   const handleApprove = async (id: string) => {
+    setProcessingId(id);
     try {
       await api.approvePayout(id);
       setPendingPayouts((prev) => prev.filter((p) => p.id !== id));
       setStats((s) => s ? { ...s, pending_approvals: s.pending_approvals - 1 } : s);
       toast("success", "Payout approved");
       loadData();
-    } catch { toast("error", "Failed to approve payout"); }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to approve payout";
+      toast("error", msg);
+    } finally { setProcessingId(null); }
   };
 
   const handleReject = async (id: string) => {
+    setProcessingId(id);
     try {
       await api.rejectPayout(id);
       setPendingPayouts((prev) => prev.filter((p) => p.id !== id));
       setStats((s) => s ? { ...s, pending_approvals: s.pending_approvals - 1 } : s);
       toast("info", "Payout rejected");
       loadData();
-    } catch { toast("error", "Failed to reject payout"); }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to reject payout";
+      toast("error", msg);
+    } finally { setProcessingId(null); }
   };
 
   if (loading) {
@@ -304,6 +326,7 @@ export default function DashboardPage() {
             payouts={pendingPayouts}
             onApprove={handleApprove}
             onReject={handleReject}
+            processingId={processingId}
           />
         </div>
       </div>

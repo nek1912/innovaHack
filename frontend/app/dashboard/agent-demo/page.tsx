@@ -132,10 +132,21 @@ export default function AgentDemoPage() {
       addEvent("thinking", result.thinking || "Analyzing task...");
 
       if (result.action) {
-        addEvent("action", `Calling tool: ${result.action}`, result.params);
+        const actionDetails: Record<string, unknown> = {};
+        if (result.params?.payee_id) actionDetails.payee_id = result.params.payee_id;
+        if (result.params?.amount_paise) actionDetails.amount_paise = result.params.amount_paise;
+        if (result.params?.mode) actionDetails.mode = result.params.mode;
+        if (result.params?.purpose) actionDetails.purpose = result.params.purpose;
+        addEvent("action", `Calling tool: ${result.action}`, actionDetails);
       }
 
-      addEvent("result", result.message || "Task completed", result);
+      const resultDetails: Record<string, unknown> = {};
+      if (result.status) resultDetails.status = result.status;
+      if (result.payout_result) {
+        resultDetails.payout_id = result.payout_result.id;
+        resultDetails.provider_status = result.payout_result.status;
+      }
+      addEvent("result", result.message || "Task completed", resultDetails);
     } catch (error) {
       addEvent("error", `Error: ${error}`);
     } finally {
