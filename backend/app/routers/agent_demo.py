@@ -65,7 +65,6 @@ async def execute_task(
         payee_id=payee_id,
         session=db,
         task_amount_paise=task.get("amount_paise"),
-        simulate=True,
     )
 
 

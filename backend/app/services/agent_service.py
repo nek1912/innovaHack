@@ -69,7 +69,6 @@ class AgentService:
         session: AsyncSession,
         payee_id: str | None = None,
         task_amount_paise: int | None = None,
-        simulate: bool = False,
     ) -> dict:
         result = await session.execute(select(Agent).where(Agent.id == agent_id))
         agent = result.scalar_one_or_none()
@@ -144,7 +143,6 @@ class AgentService:
                             mode=params.get("mode", "upi"),
                             purpose=params.get("purpose", task_description),
                             task_id=task_id,
-                            simulate=simulate,
                         )
                         parsed["payout_result"] = payout_result
                         parsed["message"] = f"Payout created: {payout_result.get('status', 'unknown')}"
@@ -152,7 +150,7 @@ class AgentService:
                     except Exception as e:
                         error_msg = str(e)
                         if "BAD_REQUEST" in error_msg:
-                            friendly_msg = "Payment request was rejected by the provider. Please check payee details."
+                            friendly_msg = f"Payment rejected by provider — check payee VPA/bank is valid for test mode. ({error_msg[:120]})"
                         elif "insufficient" in error_msg.lower():
                             friendly_msg = "Insufficient credit available for this transaction."
                         elif "frozen" in error_msg.lower():
@@ -160,7 +158,7 @@ class AgentService:
                         elif "policy" in error_msg.lower():
                             friendly_msg = "Payment blocked by company policy."
                         else:
-                            friendly_msg = "Payment could not be processed. Please try again."
+                            friendly_msg = f"Payment failed: {error_msg[:200]}"
                         parsed["message"] = friendly_msg
                         parsed["status"] = "error"
 
@@ -193,12 +191,8 @@ async def execute_payout_direct(
     mode: str,
     purpose: str,
     task_id: str,
-    simulate: bool = False,
 ) -> dict:
-    """Create a payout record directly — same path as owner_request_payout so it appears in dashboard/audit.
-
-    simulate=True skips RazorpayX calls and marks payout as "simulated" — for demo/testing only.
-    """
+    """Create a payout record directly — same path as owner_request_payout so it appears in dashboard/audit."""
     payee_uuid = uuid.UUID(payee_id)
     payee = await db.get(Payee, payee_uuid)
     if not payee or payee.agent_id != agent.id:
@@ -271,19 +265,6 @@ async def execute_payout_direct(
     if credit_account:
         await reserve_credit(credit_account_id=credit_account.id, amount=amount_paise, session=db)
 
-    if simulate:
-        # Skip RazorpayX — mark as simulated, commit spend immediately
-        if credit_account:
-            await commit_spend(credit_account_id=credit_account.id, payout_id=payout.id, amount=amount_paise, session=db)
-        payout.razorpay_status = "simulated"
-        await log_audit(
-            db, request_id, "payout_simulated",
-            detail={"payout_id": str(payout.id), "amount_paise": amount_paise, "task_id": task_id},
-            agent_id=agent.id,
-        )
-        await db.commit()
-        return {"id": str(payout.id), "status": "simulated", "policy_decision": "allow"}
-
     try:
         await ensure_payee_provider_ids(db, payee)
         result = await razorpayx_client.create_payout(
@@ -300,11 +281,17 @@ async def execute_payout_direct(
         payout.razorpay_status = "local_error"
         await log_audit(
             db, request_id, "provider_failure",
-            detail={"payout_id": str(payout.id), "error": str(e)},
+            detail={
+                "payout_id": str(payout.id),
+                "provider_error_code": e.error_code,
+                "provider_status": e.status_code,
+                "description": e.description,
+                "amount_paise": amount_paise,
+            },
             agent_id=agent.id,
         )
         await db.commit()
-        raise ValueError(f"provider_error: {e.error_code}")
+        raise ValueError(f"provider_error: {e.error_code} — {e.description}")
 
     if credit_account:
         await commit_spend(credit_account_id=credit_account.id, payout_id=payout.id, amount=amount_paise, session=db)
