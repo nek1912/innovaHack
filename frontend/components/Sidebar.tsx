@@ -48,7 +48,7 @@ export function Sidebar() {
   const navContent = (
     <>
       <div className="px-5 py-5">
-        <h1 className="text-base font-medium text-text-primary">Agent Credit Platform</h1>
+        <h1 className="text-base font-medium text-text-primary">TrustPay</h1>
       </div>
 
       <nav className="flex-1 px-3 space-y-0.5" role="navigation" aria-label="Main navigation">

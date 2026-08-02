@@ -9,7 +9,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-canvas">
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 h-16">
-        <span className="text-base font-medium text-text-primary">Autonomous Agent Credit Platform</span>
+        <span className="text-base font-medium text-text-primary">TrustPay</span>
         <div className="flex items-center gap-3">
           <Link href="/login">
             <Button variant="ghost" size="sm">Sign in</Button>
@@ -166,7 +166,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border-cool py-6 text-center text-sm text-text-muted">
-        Autonomous Agent Credit Platform
+        TrustPay Control System
       </footer>
     </div>
   );
