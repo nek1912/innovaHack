@@ -1,12 +1,7 @@
 "use client";
 
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ToastProvider } from "@/components/Toast";
+import { ToastProvider } from "./Toast";
 
 export function ClientProviders({ children }: { children: React.ReactNode }) {
-  return (
-    <ErrorBoundary>
-      <ToastProvider>{children}</ToastProvider>
-    </ErrorBoundary>
-  );
+  return <ToastProvider>{children}</ToastProvider>;
 }

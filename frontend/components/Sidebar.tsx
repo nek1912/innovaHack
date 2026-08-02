@@ -8,20 +8,17 @@ import {
   Bot,
   FileText,
   Settings,
-  Shield,
   LogOut,
   Menu,
   X,
-  Play,
 } from "lucide-react";
-import { Badge } from "./ui/Badge";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/agents", label: "Agents", icon: Bot },
+  { href: "/credit", label: "Credit", icon: FileText },
   { href: "/audit", label: "Audit Logs", icon: FileText },
   { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/agent-demo", label: "Agent Demo", icon: Play },
 ];
 
 export function Sidebar() {
@@ -30,7 +27,6 @@ export function Sidebar() {
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
-  // Close on escape
   useEffect(() => {
     if (!mobileOpen) return;
     const handleEsc = (e: KeyboardEvent) => {
@@ -47,21 +43,11 @@ export function Sidebar() {
 
   const navContent = (
     <>
-      {/* Logo */}
-      <div className="px-4 py-5 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-cyan/20 flex items-center justify-center">
-            <Shield size={18} className="text-cyan" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold">AgentFinance</h1>
-            <p className="text-xs text-text-muted">Control System</p>
-          </div>
-        </div>
+      <div className="px-5 py-5">
+        <h1 className="text-base font-medium text-text-primary">AgentFinance</h1>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1" role="navigation" aria-label="Main navigation">
+      <nav className="flex-1 px-3 space-y-0.5" role="navigation" aria-label="Main navigation">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           const Icon = item.icon;
@@ -71,37 +57,31 @@ export function Sidebar() {
               href={item.href}
               onClick={closeMobile}
               aria-current={isActive ? "page" : undefined}
-              className={`flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                 isActive
-                  ? "bg-elevated text-cyan"
-                  : "text-text-secondary hover:bg-elevated hover:text-text-primary"
+                  ? "bg-surface-warm text-text-primary"
+                  : "text-text-muted hover:text-text-primary hover:bg-surface-warm"
               }`}
             >
-              <Icon size={16} aria-hidden="true" />
+              <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
               <span>{item.label}</span>
-              {item.href === "/audit" && (
-                <Badge variant="cyan" className="ml-auto text-[10px]">
-                  Live
-                </Badge>
-              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* User section */}
-      <div className="px-3 py-4 border-t border-border">
+      <div className="px-3 py-4 border-t border-border-cool">
         <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-8 h-8 rounded-full bg-purple/20 flex items-center justify-center text-purple text-sm font-medium" aria-hidden="true">
+          <div className="w-8 h-8 rounded-full bg-surface-warm flex items-center justify-center text-text-secondary text-sm font-medium" aria-hidden="true">
             O
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">Owner</p>
+            <p className="text-sm font-medium text-text-primary truncate">Owner</p>
             <p className="text-xs text-text-muted">Admin</p>
           </div>
           <button
             onClick={handleLogout}
-            className="text-text-muted hover:text-red transition-colors"
+            className="text-text-muted hover:text-danger transition-colors cursor-pointer"
             aria-label="Logout"
           >
             <LogOut size={16} />
@@ -113,9 +93,8 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile hamburger button */}
       <button
-        className="fixed top-4 left-4 z-50 md:hidden bg-surface border border-border rounded-lg p-2 text-text-secondary hover:text-text-primary transition-colors"
+        className="fixed top-4 left-4 z-50 md:hidden bg-canvas border border-border-warm rounded-[6px] p-2 text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label={mobileOpen ? "Close menu" : "Open menu"}
         aria-expanded={mobileOpen}
@@ -123,23 +102,20 @@ export function Sidebar() {
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
           onClick={closeMobile}
           aria-hidden="true"
         />
       )}
 
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 bg-surface border-r border-border flex-col z-40">
+      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 bg-canvas border-r border-border-cool flex-col z-40">
         {navContent}
       </aside>
 
-      {/* Mobile sidebar */}
       <aside
-        className={`fixed left-0 top-0 bottom-0 w-60 bg-surface border-r border-border flex flex-col z-50 md:hidden transition-transform duration-200 ${
+        className={`fixed left-0 top-0 bottom-0 w-60 bg-canvas border-r border-border-cool flex flex-col z-50 md:hidden transition-transform duration-200 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
