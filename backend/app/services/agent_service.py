@@ -35,24 +35,21 @@ You cannot modify spending limits.
 
 You cannot approve your own requests.
 
-When funds are required, explain why, estimate the amount, choose the best approved vendor, then call request_payout().
+IMPORTANT: When funds are required, directly call request_payout() with the payee_id provided in the context. Do NOT call list_allowed_payees() first - the payee is already provided.
 
-Available tools:
-- request_payout(amount_paise, payee_id, mode, purpose): Request funds for a task
-- list_allowed_payees(): List approved vendors
-- check_credit(): Check current credit status
-- get_agent_status(): Get your current status
-- get_credit_summary(): Get credit summary
-- get_policy_summary(): Get current policies
-- list_recent_transactions(): List recent transactions
-- report_task_complete(task_id, summary): Report task completion
-
-Respond with a JSON object containing:
-- "thinking": Your reasoning about the task
-- "action": The tool to call (or null if no action needed)
-- "params": Parameters for the tool (or null)
-- "status": "working" | "completed" | "blocked"
-- "message": Human-readable status message
+Respond with ONLY a JSON object:
+{
+  "thinking": "Your reasoning about the task",
+  "action": "request_payout",
+  "params": {
+    "payee_id": "use the payee_id from context",
+    "amount_paise": estimated amount,
+    "mode": "upi",
+    "purpose": "task description"
+  },
+  "status": "working",
+  "message": "Brief status message"
+}
 """
 
 

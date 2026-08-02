@@ -16,7 +16,7 @@ class Owner(Base):
     email: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     razorpayx_customer_id: Mapped[str | None] = mapped_column(Text)
-    kyc_status: Mapped[str] = mapped_column(Text, nullable=False, default="pending")
+    kyc_status: Mapped[str] = mapped_column(Text, nullable=False, default="test_only")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     agents: Mapped[list["Agent"]] = relationship(back_populates="owner")

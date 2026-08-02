@@ -232,27 +232,7 @@ export default function AgentDemoPage() {
         </div>
       </div>
 
-      <div className="p-6 bg-elevated border border-border rounded-lg">
-        <h2 className="text-lg font-semibold mb-4">PS Evaluation Mapping</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div className="p-3 bg-surface border border-border rounded">
-            <div className="font-medium">Trust Design</div>
-            <div className="text-text-muted">Underwriting + Credit Issuance</div>
-          </div>
-          <div className="p-3 bg-surface border border-border rounded">
-            <div className="font-medium">Repayment / Credit</div>
-            <div className="text-text-muted">Credit Consumption</div>
-          </div>
-          <div className="p-3 bg-surface border border-border rounded">
-            <div className="font-medium">Risk Containment</div>
-            <div className="text-text-muted">Credit Exhausted + Frozen</div>
-          </div>
-          <div className="p-3 bg-surface border border-border rounded">
-            <div className="font-medium">Technical Soundness</div>
-            <div className="text-text-muted">Duplicate + Webhook + Audit</div>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 }
