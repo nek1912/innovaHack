@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+.next/
+out/
+dist/
+build/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+tunnel_output.txt
+
+# Tools
+tools/opa.exe
+
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Alembic
+backend/alembic/versions/*.pyc
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Misc
+*.bak
+*.tmp
