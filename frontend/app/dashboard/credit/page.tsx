@@ -75,7 +75,7 @@ function AgentRiskTable({ agents }: { agents: CreditRiskData["agents"] }) {
     <Card padding={false}>
       <CardHeader className="px-4 pt-4">
         <CardTitle>Agent risk levels</CardTitle>
-        <Link href="/credit/risk">
+        <Link href="/dashboard/credit/risk">
           <Badge variant="cyan" className="cursor-pointer">View details</Badge>
         </Link>
       </CardHeader>
@@ -98,7 +98,7 @@ function AgentRiskTable({ agents }: { agents: CreditRiskData["agents"] }) {
             agents.map((agent) => (
               <TableRow key={agent.agent_id}>
                 <TableCell>
-                  <Link href={`/credit/${agent.agent_id}`} className="text-text-primary hover:underline">
+                  <Link href={`/dashboard/credit/${agent.agent_id}`} className="text-text-primary hover:underline">
                     {agent.agent_name}
                   </Link>
                 </TableCell>

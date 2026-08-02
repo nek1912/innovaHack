@@ -122,7 +122,7 @@ function RecentPayouts({ payouts }: { payouts: PayoutDetail[] }) {
     <Card>
       <CardHeader>
         <CardTitle>Recent payouts</CardTitle>
-        <Link href="/audit">
+        <Link href="/dashboard/audit">
           <Button variant="ghost" size="sm">View all</Button>
         </Link>
       </CardHeader>
@@ -167,7 +167,7 @@ function AuditPreview({ entries }: { entries: AuditEntry[] }) {
     <Card>
       <CardHeader>
         <CardTitle>Audit log preview</CardTitle>
-        <Link href="/audit">
+        <Link href="/dashboard/audit">
           <Button variant="ghost" size="sm">View all</Button>
         </Link>
       </CardHeader>

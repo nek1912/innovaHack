@@ -59,7 +59,7 @@ export default function RepaymentsPage() {
 
   return (
     <div>
-      <Link href={`/credit/${agentId}`} className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
+      <Link href={`/dashboard/credit/${agentId}`} className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
         <ArrowLeft size={16} /> Back to credit account
       </Link>
 

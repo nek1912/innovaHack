@@ -128,7 +128,7 @@ export default function AgentsPage() {
             ) : agents.map((a) => (
               <TableRow key={a.id}>
                 <TableCell>
-                  <Link href={`/agents/${a.id}`} className="font-medium text-text-primary hover:underline">{a.name}</Link>
+                  <Link href={`/dashboard/agents/${a.id}`} className="font-medium text-text-primary hover:underline">{a.name}</Link>
                 </TableCell>
                 <TableCell><Badge variant={getStatusVariant(a.status)}>{a.status}</Badge></TableCell>
                 <TableCell className="text-right font-mono">{formatPaise(a.per_tx_cap_paise)}</TableCell>
@@ -136,7 +136,7 @@ export default function AgentsPage() {
                 <TableCell className="text-right font-mono">{formatPaise(a.approval_threshold_paise)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Link href={`/agents/${a.id}`}><Button variant="ghost" size="sm"><Shield size={14} /></Button></Link>
+                    <Link href={`/dashboard/agents/${a.id}`}><Button variant="ghost" size="sm"><Shield size={14} /></Button></Link>
                     <Button variant={a.status === "frozen" ? "success" : "danger"} size="sm" onClick={() => toggleFreeze(a.id, a.status)}>
                       {a.status === "frozen" ? <><Unlock size={14} /> Unfreeze</> : <><Lock size={14} /> Freeze</>}
                     </Button>

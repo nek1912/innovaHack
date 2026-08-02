@@ -75,14 +75,14 @@ export default function CreditAccountDetailPage() {
     return (
       <div className="text-center py-12">
         <p className="text-text-muted">Credit account not found</p>
-        <Link href="/credit"><Button variant="ghost" className="mt-4">Back to credit dashboard</Button></Link>
+        <Link href="/dashboard/credit"><Button variant="ghost" className="mt-4">Back to credit dashboard</Button></Link>
       </div>
     );
   }
 
   return (
     <div>
-      <Link href="/credit" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
+      <Link href="/dashboard/credit" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
         <ArrowLeft size={16} /> Back to credit dashboard
       </Link>
 
@@ -123,8 +123,8 @@ export default function CreditAccountDetailPage() {
 
       {/* Quick links */}
       <div className="flex gap-4 mb-8">
-        <Link href={`/credit/${agentId}/underwriting`} className="text-sm text-text-muted hover:text-text-primary hover:underline">View underwriting</Link>
-        <Link href={`/credit/${agentId}/repayments`} className="text-sm text-text-muted hover:text-text-primary hover:underline">View repayments</Link>
+        <Link href={`/dashboard/credit/${agentId}/underwriting`} className="text-sm text-text-muted hover:text-text-primary hover:underline">View underwriting</Link>
+        <Link href={`/dashboard/credit/${agentId}/repayments`} className="text-sm text-text-muted hover:text-text-primary hover:underline">View repayments</Link>
       </div>
 
       {/* Transaction history */}

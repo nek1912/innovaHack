@@ -120,7 +120,7 @@ export default function AgentDetailPage() {
     return (
       <div className="text-center py-12">
         <p className="text-text-muted">{loadError || "Agent not found"}</p>
-        <Link href="/agents"><Button variant="ghost" className="mt-4">Back to agents</Button></Link>
+        <Link href="/dashboard/agents"><Button variant="ghost" className="mt-4">Back to agents</Button></Link>
       </div>
     );
   }
@@ -134,7 +134,7 @@ export default function AgentDetailPage() {
 
   return (
     <div>
-      <Link href="/agents" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
+      <Link href="/dashboard/agents" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
         <ArrowLeft size={16} /> Back to agents
       </Link>
 

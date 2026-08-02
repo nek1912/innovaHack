@@ -34,14 +34,14 @@ export default function RiskDashboard() {
     return (
       <div className="text-center py-12">
         <p className="text-text-muted">No risk data available</p>
-        <Link href="/credit" className="text-sm text-text-muted hover:underline mt-2 inline-block">Back to credit dashboard</Link>
+        <Link href="/dashboard/credit" className="text-sm text-text-muted hover:underline mt-2 inline-block">Back to credit dashboard</Link>
       </div>
     );
   }
 
   return (
     <div>
-      <Link href="/credit" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
+      <Link href="/dashboard/credit" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
         <ArrowLeft size={16} /> Back to credit dashboard
       </Link>
 
@@ -93,7 +93,7 @@ export default function RiskDashboard() {
               risk.agents.map((agent) => (
                 <TableRow key={agent.agent_id}>
                   <TableCell>
-                    <Link href={`/credit/${agent.agent_id}`} className="text-text-primary hover:underline">
+                    <Link href={`/dashboard/credit/${agent.agent_id}`} className="text-text-primary hover:underline">
                       {agent.agent_name}
                     </Link>
                   </TableCell>

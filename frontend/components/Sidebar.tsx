@@ -18,11 +18,10 @@ import {
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/agent-demo", label: "Agent Demo", icon: Play },
-  { href: "/agents", label: "Agents", icon: Bot },
-  { href: "/credit", label: "Credit", icon: CreditCard },
-  { href: "/audit", label: "Audit Logs", icon: FileText },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard/agents", label: "Agents", icon: Bot },
+  { href: "/dashboard/credit", label: "Credit", icon: CreditCard },
+  { href: "/dashboard/audit", label: "Audit Logs", icon: FileText },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar() {
