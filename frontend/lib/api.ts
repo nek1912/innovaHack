@@ -72,6 +72,35 @@ export interface PayoutResponse {
   policy_reason: string | null;
 }
 
+export interface CreditDashboardData {
+  total_accounts: number;
+  active_accounts: number;
+  frozen_accounts: number;
+  total_credit_limit: number;
+  total_available: number;
+  total_used: number;
+  total_reserved: number;
+}
+
+export interface CreditRiskData {
+  overall_risk: string;
+  overall_score: number;
+  total_violations: number;
+  total_failures: number;
+  total_defaults: number;
+  total_frozen: number;
+  agents: Array<{
+    agent_id: string;
+    agent_name: string;
+    risk_level: string;
+    risk_score: number;
+    violations: number;
+    failures: number;
+    defaults: number;
+    is_frozen: boolean;
+  }>;
+}
+
 export interface OwnerToken {
   access_token: string;
   token_type: string;
@@ -173,4 +202,11 @@ export const api = {
 
   // Dashboard
   getStats: () => request<DashboardStats>("/owner/stats"),
+
+  // Credit
+  getCreditDashboard: () =>
+    request<CreditDashboardData>("/owner/credit/dashboard"),
+
+  getCreditRisk: () =>
+    request<CreditRiskData>("/owner/credit/risk"),
 };
