@@ -31,22 +31,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-sm">
-        {/* Logo */}
+    <div className="min-h-screen flex items-center justify-center bg-canvas">
+      <div className="w-full max-w-sm px-4">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-lg bg-cyan/20 flex items-center justify-center">
-            <Shield size={24} className="text-cyan" />
+          <div className="w-10 h-10 rounded-full bg-surface-warm flex items-center justify-center">
+            <Shield size={20} className="text-text-muted" strokeWidth={1.5} />
           </div>
           <div>
-            <h1 className="text-xl font-bold">AgentFinance</h1>
+            <h1 className="text-base font-medium text-text-primary">AgentFinance</h1>
             <p className="text-xs text-text-muted">Control System</p>
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">
-            {isRegister ? "Create Account" : "Sign In"}
+        <div className="border border-border-warm rounded-[10px] p-6">
+          <h2 className="text-lg font-medium text-text-primary mb-4">
+            {isRegister ? "Create account" : "Sign in"}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -58,7 +57,7 @@ export default function LoginPage() {
                   placeholder="John Doe"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-elevated border border-border rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-cyan focus:ring-1 focus:ring-cyan/50"
+                  className="w-full bg-canvas border border-border-warm rounded-[10px] h-10 px-4 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-ink transition-colors"
                   required
                 />
               </div>
@@ -70,7 +69,7 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-elevated border border-border rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-cyan focus:ring-1 focus:ring-cyan/50"
+                className="w-full bg-canvas border border-border-warm rounded-[10px] h-10 px-4 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-ink transition-colors"
                 required
               />
             </div>
@@ -81,19 +80,19 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-elevated border border-border rounded px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-cyan focus:ring-1 focus:ring-cyan/50"
+                className="w-full bg-canvas border border-border-warm rounded-[10px] h-10 px-4 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-ink transition-colors"
                 required
               />
             </div>
             {error && (
-              <p className="text-sm text-red">{error}</p>
+              <p className="text-sm text-danger">{error}</p>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-cyan text-primary-foreground rounded py-2 text-sm font-medium hover:bg-cyan/90 disabled:opacity-50 transition-colors"
+              className="w-full bg-lime text-ink border-none rounded-[6px] h-10 text-sm font-medium hover:bg-lime-hover disabled:opacity-50 transition-colors cursor-pointer"
             >
-              {loading ? "Please wait..." : isRegister ? "Create Account" : "Sign In"}
+              {loading ? "Please wait..." : isRegister ? "Create account" : "Sign in"}
             </button>
           </form>
         </div>
@@ -101,7 +100,7 @@ export default function LoginPage() {
         <p className="text-sm text-text-muted mt-4 text-center">
           <button
             onClick={() => setIsRegister(!isRegister)}
-            className="text-cyan hover:underline"
+            className="text-text-primary hover:underline cursor-pointer"
           >
             {isRegister ? "Already have an account? Sign in" : "No account? Create one"}
           </button>
