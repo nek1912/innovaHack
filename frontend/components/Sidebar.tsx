@@ -11,12 +11,16 @@ import {
   LogOut,
   Menu,
   X,
+  Play,
+  CreditCard,
+  Shield,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/agent-demo", label: "Agent Demo", icon: Play },
   { href: "/agents", label: "Agents", icon: Bot },
-  { href: "/credit", label: "Credit", icon: FileText },
+  { href: "/credit", label: "Credit", icon: CreditCard },
   { href: "/audit", label: "Audit Logs", icon: FileText },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -44,7 +48,7 @@ export function Sidebar() {
   const navContent = (
     <>
       <div className="px-5 py-5">
-        <h1 className="text-base font-medium text-text-primary">TrustPay</h1>
+        <h1 className="text-base font-medium text-text-primary">Agent Credit Platform</h1>
       </div>
 
       <nav className="flex-1 px-3 space-y-0.5" role="navigation" aria-label="Main navigation">
