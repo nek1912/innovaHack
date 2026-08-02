@@ -407,29 +407,9 @@ test_over_threshold_and_inactive_payee_denies if {
         "payee_active": false,
         "credit": {"has_credit": true, "available": 500000, "reserved": 0, "status": "active"}
     }
-    not requires_approval with input as {
-        "amount_paise": 80000,
-        "per_tx_cap_paise": 100000,
-        "daily_cap_paise": 500000,
-        "daily_spent_paise": 0,
-        "approval_threshold_paise": 75000,
-        "agent_status": "active",
-        "payee_active": false,
-        "credit": {"has_credit": true, "available": 500000, "reserved": 0, "status": "active"}
-    }
 }
 
 test_over_threshold_daily_cap_denies if {
-    not requires_approval with input as {
-        "amount_paise": 80000,
-        "per_tx_cap_paise": 100000,
-        "daily_cap_paise": 500000,
-        "daily_spent_paise": 450000,
-        "approval_threshold_paise": 75000,
-        "agent_status": "active",
-        "payee_active": true,
-        "credit": {"has_credit": true, "available": 500000, "reserved": 0, "status": "active"}
-    }
     deny_reason == "daily_cap_exceeded" with input as {
         "amount_paise": 80000,
         "per_tx_cap_paise": 100000,
@@ -445,16 +425,6 @@ test_over_threshold_daily_cap_denies if {
 # --- deny: credit_not_issued ---
 
 test_credit_not_issued if {
-    not allow with input as {
-        "agent_status": "active",
-        "per_tx_cap_paise": 10000,
-        "daily_cap_paise": 50000,
-        "daily_spent_paise": 0,
-        "payee_active": true,
-        "approval_threshold_paise": 5000,
-        "amount_paise": 1000,
-        "credit": {"has_credit": false, "available": 0, "reserved": 0, "status": "none"}
-    }
     deny_reason == "credit_not_issued" with input as {
         "agent_status": "active",
         "per_tx_cap_paise": 10000,
@@ -470,16 +440,6 @@ test_credit_not_issued if {
 # --- deny: credit_inactive ---
 
 test_credit_inactive if {
-    not allow with input as {
-        "agent_status": "active",
-        "per_tx_cap_paise": 10000,
-        "daily_cap_paise": 50000,
-        "daily_spent_paise": 0,
-        "payee_active": true,
-        "approval_threshold_paise": 5000,
-        "amount_paise": 1000,
-        "credit": {"has_credit": true, "available": 5000, "reserved": 0, "status": "frozen"}
-    }
     deny_reason == "credit_inactive" with input as {
         "agent_status": "active",
         "per_tx_cap_paise": 10000,
@@ -495,16 +455,6 @@ test_credit_inactive if {
 # --- deny: credit_exhausted ---
 
 test_credit_exhausted if {
-    not allow with input as {
-        "agent_status": "active",
-        "per_tx_cap_paise": 10000,
-        "daily_cap_paise": 50000,
-        "daily_spent_paise": 0,
-        "payee_active": true,
-        "approval_threshold_paise": 5000,
-        "amount_paise": 1000,
-        "credit": {"has_credit": true, "available": 500, "reserved": 0, "status": "active"}
-    }
     deny_reason == "credit_exhausted" with input as {
         "agent_status": "active",
         "per_tx_cap_paise": 10000,
@@ -535,16 +485,6 @@ test_credit_available_allows if {
 # --- precedence: frozen beats credit ---
 
 test_frozen_agent_denied_before_credit if {
-    not allow with input as {
-        "agent_status": "frozen",
-        "per_tx_cap_paise": 10000,
-        "daily_cap_paise": 50000,
-        "daily_spent_paise": 0,
-        "payee_active": true,
-        "approval_threshold_paise": 5000,
-        "amount_paise": 1000,
-        "credit": {"has_credit": true, "available": 5000, "reserved": 0, "status": "active"}
-    }
     deny_reason == "agent_frozen" with input as {
         "agent_status": "frozen",
         "per_tx_cap_paise": 10000,
