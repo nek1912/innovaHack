@@ -7,29 +7,28 @@ import { Badge, getStatusVariant } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Input";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableEmpty } from "@/components/ui/Table";
-import { Filter } from "lucide-react";
 
 const EVENT_TYPES = [
-  { value: "", label: "All Events" },
-  { value: "payout_requested", label: "Payout Requested" },
-  { value: "policy_denied", label: "Policy Denied" },
-  { value: "policy_allowed", label: "Policy Allowed" },
-  { value: "approval_required", label: "Approval Required" },
+  { value: "", label: "All events" },
+  { value: "payout_requested", label: "Payout requested" },
+  { value: "policy_denied", label: "Policy denied" },
+  { value: "policy_allowed", label: "Policy allowed" },
+  { value: "approval_required", label: "Approval required" },
   { value: "approved", label: "Approved" },
   { value: "rejected", label: "Rejected" },
   { value: "freeze", label: "Frozen" },
   { value: "unfreeze", label: "Unfrozen" },
-  { value: "payout_webhook", label: "Webhook Event" },
-  { value: "credit_issued", label: "Credit Issued" },
-  { value: "credit_reserved", label: "Credit Reserved" },
-  { value: "credit_committed", label: "Credit Committed" },
-  { value: "credit_released", label: "Credit Released" },
-  { value: "credit_frozen", label: "Credit Frozen" },
-  { value: "credit_unfrozen", label: "Credit Unfrozen" },
-  { value: "repayment_created", label: "Repayment Created" },
-  { value: "repayment_paid", label: "Repayment Paid" },
-  { value: "repayment_late", label: "Repayment Late" },
-  { value: "repayment_defaulted", label: "Repayment Defaulted" },
+  { value: "payout_webhook", label: "Webhook event" },
+  { value: "credit_issued", label: "Credit issued" },
+  { value: "credit_reserved", label: "Credit reserved" },
+  { value: "credit_committed", label: "Credit committed" },
+  { value: "credit_released", label: "Credit released" },
+  { value: "credit_frozen", label: "Credit frozen" },
+  { value: "credit_unfrozen", label: "Credit unfrozen" },
+  { value: "repayment_created", label: "Repayment created" },
+  { value: "repayment_paid", label: "Repayment paid" },
+  { value: "repayment_late", label: "Repayment late" },
+  { value: "repayment_defaulted", label: "Repayment defaulted" },
 ];
 
 export default function AuditPage() {
@@ -71,18 +70,15 @@ export default function AuditPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Audit Logs</h1>
-        <p className="text-sm text-text-muted">Complete trail of every action and decision</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-normal text-text-primary">Audit logs</h1>
+        <p className="text-sm text-text-muted mt-1">Complete trail of every action and decision</p>
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
+      <div className="bg-surface-warm border border-border-cool rounded-[10px] p-4 mb-6">
         <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2 text-text-muted">
-            <Filter size={16} aria-hidden="true" />
-            <span className="text-sm font-medium">Filters</span>
-          </div>
+          <span className="text-xs font-medium text-text-muted uppercase tracking-wider">Filters</span>
           <Select
             options={EVENT_TYPES}
             value={filters.event_type}
@@ -96,26 +92,24 @@ export default function AuditPage() {
             type="date"
             value={filters.from}
             onChange={(e) => setFilters({ ...filters, from: e.target.value })}
-            className="bg-elevated border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-cyan"
-            placeholder="From"
+            className="bg-canvas border border-border-warm rounded-[10px] h-10 px-4 text-sm text-text-primary focus:outline-none focus:border-ink"
           />
           <input
             type="date"
             value={filters.to}
             onChange={(e) => setFilters({ ...filters, to: e.target.value })}
-            className="bg-elevated border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-cyan"
-            placeholder="To"
+            className="bg-canvas border border-border-warm rounded-[10px] h-10 px-4 text-sm text-text-primary focus:outline-none focus:border-ink"
           />
           <Button variant="ghost" size="sm" onClick={resetFilters}>
             Reset
           </Button>
         </div>
-      </Card>
+      </div>
 
       {/* Table */}
       {(loading || isPending) ? (
         <div className="flex items-center justify-center h-64">
-          <div className="text-text-muted">Loading audit log...</div>
+          <div className="text-sm text-text-muted">Loading audit log...</div>
         </div>
       ) : (
         <Card padding={false}>
@@ -149,7 +143,7 @@ export default function AuditPage() {
                       {e.detail ? (
                         <div className="space-y-1">
                           {typeof e.detail.reason === "string" && (
-                            <span className="text-amber">{e.detail.reason}</span>
+                            <span className="text-warning">{e.detail.reason}</span>
                           )}
                           {typeof e.detail.payout_id === "string" && (
                             <span className="text-text-muted">Payout: {e.detail.payout_id.slice(0, 8)}...</span>
@@ -174,7 +168,7 @@ export default function AuditPage() {
           </Table>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border-cool">
             <span className="text-sm text-text-muted">
               {total} total entries
             </span>
