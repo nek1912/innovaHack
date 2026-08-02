@@ -6,7 +6,7 @@ import { api, CreditDashboardData, CreditRiskData } from "@/lib/api";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableEmpty } from "@/components/ui/Table";
-import { Wallet, TrendingUp, TrendingDown, Lock, Shield, AlertTriangle } from "lucide-react";
+import { Shield, AlertTriangle } from "lucide-react";
 
 function formatPaise(paise: number) {
   return `₹${(paise / 100).toLocaleString("en-IN")}`;

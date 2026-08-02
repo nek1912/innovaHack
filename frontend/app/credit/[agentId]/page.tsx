@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableEmpty } from "@/components/ui/Table";
 import { useToast } from "@/components/Toast";
-import { ArrowLeft, Lock, Unlock, AlertTriangle, CreditCard, Activity, TrendingDown, Shield } from "lucide-react";
+import { ArrowLeft, Lock, Unlock } from "lucide-react";
 
 function formatPaise(paise: number) {
   return `₹${(paise / 100).toLocaleString("en-IN")}`;

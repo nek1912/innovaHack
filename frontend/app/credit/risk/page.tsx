@@ -6,7 +6,7 @@ import { api, CreditRiskData } from "@/lib/api";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableEmpty } from "@/components/ui/Table";
-import { ArrowLeft, Shield, AlertTriangle, Lock } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 function riskBadgeVariant(level: string): "green" | "amber" | "red" {
   if (level === "LOW") return "green";

@@ -10,7 +10,7 @@ import { Input, Select } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableEmpty } from "@/components/ui/Table";
 import { useToast } from "@/components/Toast";
-import { ArrowLeft, Plus, Lock, Unlock, Wallet, CreditCard, Clock, Power, Send } from "lucide-react";
+import { ArrowLeft, Plus, Lock, Unlock, Wallet, Clock, Power, Send } from "lucide-react";
 import Link from "next/link";
 
 function formatPaise(paise: number) {
@@ -37,7 +37,8 @@ export default function AgentDetailPage() {
   const [payoutForm, setPayoutForm] = useState({ payee_id: "", amount_paise: 1000, mode: "upi", purpose: "" });
   const [submitting, setSubmitting] = useState(false);
 
-  const load = () => {
+  useEffect(() => {
+    if (!localStorage.getItem("token")) { window.location.href = "/login"; return; }
     Promise.all([
       api.getAgent(agentId),
       api.listAgentPayees(agentId),
@@ -52,11 +53,6 @@ export default function AgentDetailPage() {
       })
       .catch(() => { window.location.href = "/login"; })
       .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    if (!localStorage.getItem("token")) { window.location.href = "/login"; return; }
-    load();
   }, [agentId]);
 
   const handleToggleFreeze = async () => {
@@ -100,7 +96,7 @@ export default function AgentDetailPage() {
         purpose: payoutForm.purpose || undefined,
       });
       if (res.policy_decision === "approval_required") {
-        toast("info", "Payout requires approval — check dashboard");
+        toast("info", "Payout requires approval ï¿½ check dashboard");
       } else {
         toast("success", "Payout created: " + res.status);
       }
@@ -191,7 +187,7 @@ export default function AgentDetailPage() {
           />
           <div className="bg-surface-warm rounded-[10px] p-3 text-sm border border-border-cool">
             <p className="text-text-muted">Amount: <span className="text-text-primary font-medium">{formatPaise(payoutForm.amount_paise)}</span></p>
-            <p className="text-text-muted mt-1">Per-tx cap: {formatPaise(agent.per_tx_cap_paise)} · Approval threshold: {formatPaise(agent.approval_threshold_paise)}</p>
+            <p className="text-text-muted mt-1">Per-tx cap: {formatPaise(agent.per_tx_cap_paise)} ï¿½ Approval threshold: {formatPaise(agent.approval_threshold_paise)}</p>
           </div>
           <Select
             label="Mode"
