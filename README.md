@@ -1,72 +1,110 @@
-# Agent Finance Control System
+# Autonomous Agent Credit Platform
 
 Mission-control dashboard for supervising autonomous AI agents that handle real money via RazorpayX. Owners set limits and policies, agents request payouts, OPA gates every transaction, and every action is audited.
+
+**Credit-for-autonomous-agents control system** with underwriting, credit issuance, constrained spending, repayment tracking, risk scoring, and autonomous agent demo.
 
 ---
 
 ## Problem Statement
 
-Autonomous AI agents increasingly need to move money — paying vendors, settling invoices, disbursing funds. But giving an agent unchecked access to a payment provider is a liability. This system solves that by placing a policy engine (OPA) between every payout request and execution, with owner approval thresholds, per-transaction and daily spending caps, a kill switch, and a full audit trail.
+Autonomous AI agents increasingly need to move money — paying vendors, settling invoices, disbursing funds. But giving an agent unchecked access to a payment provider is a liability. This system solves that by:
+
+1. **Issuing credit** after underwriting
+2. **Enforcing credit limits** via OPA policy
+3. **Reserving credit** before payout execution
+4. **Tracking repayment** with mandate-ready schema
+5. **Scoring risk** and freezing on default
 
 ---
 
 ## Features
 
-### Implemented
+### Credit System
 
-- Owner authentication (register/login, JWT)
-- Agent management (create, freeze/unfreeze, API key generation)
-- Payee management (add, activate/deactivate, VPA or bank account)
-- OPA policy enforcement (per-tx cap, daily cap, approval threshold, frozen agent, inactive payee)
-- Approval workflow (pending payouts require owner approve/reject)
-- Kill switch (freeze agent → all requests blocked immediately)
-- Audit logging (every financial transition recorded with request ID and actor)
-- RazorpayX test integration (contacts, fund accounts, payouts)
-- Webhook signature verification (HMAC-SHA256, idempotent processing)
-- Reconciliation (background job, provider truth, retry cap, stale marking)
-- Rate limiting (20 requests/60s per API key on payout endpoint)
-- Dashboard with live polling (30s auto-refresh)
-- Payout request form (owner-initiated via frontend)
-- Toast notification system
-- Error boundary with retry
-- Health check (DB + OPA dependency checks)
-- CORS from environment variable
-- 102 automated tests + 30 OPA policy tests
+- Credit accounts with limit/available/used/reserved
+- Append-only credit transaction ledger
+- Underwriting engine (explainable scoring)
+- Credit reservation before payout
+- Credit release on provider failure
+- Credit commit on success
+- Repayment schedule (mandate-ready schema)
+- Simulated manual repayment
+- Risk scoring per agent
+- Default handling with agent freeze
+- OPA credit checks (7 deny reasons)
 
-### Not Yet Implemented
+### Autonomous Agent Demo
 
-- Credit ledger and credit accounts
-- Repayment engine
-- Underwriting and risk scoring
-- Production RazorpayX mode
-- Frontend automated tests
-- Multi-currency support
-- Agent-to-agent transfers
+- Groq LLM integration for autonomous decisions
+- Constrained system prompt (agent cannot approve/modify policies)
+- 5 demo tasks covering all scenarios
+- Timeline UI showing agent reasoning
+- PS evaluation mapping
+
+### Finance Control
+
+- Owner authentication (JWT)
+- Agent API key authentication
+- Payee management
+- OPA policy enforcement
+- Approval workflow
+- Kill switch (freeze/unfreeze)
+- RazorpayX test integration
+- Webhook signature verification
+- Reconciliation
+- Rate limiting
+- Audit logging
 
 ---
 
 ## Architecture
 
 ```
-Owner → Frontend (Next.js 16) → FastAPI Backend → OPA Policy Engine → RazorpayX (Test)
-                                    ↓
-                               PostgreSQL
-                                    ↓
-                              Audit Dashboard
+Owner (Sarah)
+    ↓
+Creates Agent (Procurement Agent)
+    ↓
+Issues Credit (₹10,000)
+    ↓
+Starts Agent Demo
+    ↓
+Agent (Groq LLM)
+    ↓
+Reasons about task
+    ↓
+Calls request_payout()
+    ↓
+Backend authenticates
+    ↓
+OPA evaluates (credit + caps)
+    ↓
+Credit reserved
+    ↓
+RazorpayX Test Mode
+    ↓
+Webhook received
+    ↓
+Credit committed
+    ↓
+Audit logged
+    ↓
+Timeline updated
 ```
 
-**Request flow:**
+### Request Flow
 
-1. Owner creates agent and payees via frontend
+1. Owner creates agent and issues credit
 2. Agent requests payout (API key auth)
-3. Backend builds policy input from live DB state
+3. Backend builds policy input with credit data
 4. OPA evaluates: allow / requires_approval / deny
-5. Allow → RazorpayX executes payout
-6. Approval required → pending payout, owner approves from dashboard
+5. Allow → reserve credit → RazorpayX executes → commit credit
+6. Approval required → pending payout, owner approves
 7. Deny → request blocked, reason logged
-8. RazorpayX webhook confirms result
-9. Reconciliation verifies stuck payouts every 10 minutes
-10. Every transition written to audit log
+8. Provider failure → release credit reservation
+9. Webhook confirms result
+10. Reconciliation verifies stuck payouts
+11. Every transition written to audit log
 
 ---
 
@@ -79,6 +117,7 @@ Owner → Frontend (Next.js 16) → FastAPI Backend → OPA Policy Engine → Ra
 | Database | PostgreSQL 16 (asyncpg) |
 | Policy Engine | Open Policy Agent (OPA), Rego |
 | Payments | RazorpayX API (UPI, IMPS, NEFT, RTGS) |
+| AI Agent | Groq LLM (llama-3.3-70b-versatile) |
 | Auth | JWT (HS256), bcrypt passwords, SHA-256 API keys |
 
 ---
@@ -93,28 +132,55 @@ agent-finance/
 │   │   ├── config.py            # Pydantic settings
 │   │   ├── auth.py              # JWT + API key auth
 │   │   ├── deps.py              # Audit, rate limit, IST helpers
-│   │   ├── models/owner.py      # Owner, Agent, Payee, Payout, AuditLog
-│   │   ├── schemas/payout.py    # Request/response models
+│   │   ├── models/
+│   │   │   ├── owner.py         # Owner, Agent, Payee, Payout, AuditLog
+│   │   │   └── credit.py        # CreditAccount, CreditTransaction, CreditDecision, RepaymentSchedule
 │   │   ├── routers/
-│   │   │   ├── owner_admin.py   # 15 owner endpoints
+│   │   │   ├── owner_admin.py   # Owner endpoints
 │   │   │   ├── agent_payouts.py # Agent payout request
+│   │   │   ├── credit.py        # Credit issue, repay, history
+│   │   │   ├── credit_admin.py  # Credit freeze/unfreeze, dashboard
+│   │   │   ├── agent_demo.py    # Autonomous agent demo
 │   │   │   ├── audit.py         # Audit log viewer
 │   │   │   └── webhooks.py      # RazorpayX webhook
 │   │   └── services/
 │   │       ├── razorpayx.py     # RazorpayX client
 │   │       ├── opa_client.py    # OPA HTTP client
-│   │       ├── policy_input.py  # Builds OPA input
+│   │       ├── policy_input.py  # Builds OPA input with credit
+│   │       ├── credit_engine.py # Credit issue/reserve/commit/release
+│   │       ├── underwriting.py  # Credit scoring
+│   │       ├── repayment.py     # Repayment schedule + scheduler
+│   │       ├── risk.py          # Risk scoring
+│   │       ├── agent_service.py # Groq LLM integration
+│   │       ├── agent_tools.py   # Safe tool wrappers
+│   │       ├── demo_tasks.py    # Demo task catalog
 │   │       ├── reconciliation.py# Background reconciliation
 │   │       └── kill_switch.py   # Freeze/unfreeze
-│   ├── tests/                   # 102 automated tests
-│   └── alembic/                 # 4 applied migrations
+│   ├── tests/                   # 120+ automated tests
+│   └── alembic/                 # 5 applied migrations
 ├── frontend/
-│   ├── app/                     # Next.js pages
-│   ├── components/              # UI components
+│   ├── app/
+│   │   ├── dashboard/           # Main dashboard
+│   │   ├── credit/              # Credit dashboard
+│   │   │   ├── [agentId]/       # Credit account detail
+│   │   │   │   ├── underwriting/
+│   │   │   │   └── repayments/
+│   │   │   └── risk/            # Risk dashboard
+│   │   ├── agent-demo/          # Autonomous agent demo
+│   │   ├── agents/              # Agent management
+│   │   ├── audit/               # Audit log viewer
+│   │   └── settings/            # System settings
+│   ├── components/
+│   │   ├── AgentTimeline.tsx    # Agent activity timeline
+│   │   ├── CreditCard.tsx       # Credit balance display
+│   │   ├── CreditTimeline.tsx   # Transaction history
+│   │   ├── RepaymentTable.tsx   # Repayment list
+│   │   ├── RiskGauge.tsx        # Risk score visualization
+│   │   └── UnderwritingFactors.tsx
 │   └── lib/api.ts              # Typed API client
 ├── policy/
-│   ├── spend.rego               # OPA policy
-│   └── spend_test.rego          # 30 OPA tests
+│   ├── spend.rego               # OPA policy with credit checks
+│   └── spend_test.rego          # 35 OPA tests
 └── docs/                        # Architecture, API, security docs
 ```
 
@@ -124,15 +190,30 @@ agent-finance/
 
 - **JWT Authentication** — Owner tokens with 24h expiry
 - **API Key Auth** — SHA-256 hashed, never returned after creation
-- **Owner Isolation** — Every endpoint verifies `agent.owner_id == owner.id`, cross-owner access returns 404
+- **Owner Isolation** — Every endpoint verifies ownership, cross-owner returns 404
 - **Kill Switch** — Freeze agent → blocked at auth and policy layers
 - **Rate Limiting** — 20 requests/60s per API key on payout endpoint
-- **Duplicate Detection** — 60s window for identical agent+payee+amount requests
-- **Row Locking** — `SELECT FOR UPDATE` serializes concurrent payout requests per agent
-- **Webhook Verification** — HMAC-SHA256 signature with constant-time comparison
-- **Structured Errors** — Provider errors sanitized, no API keys leaked
-- **Audit Trail** — Every financial transition recorded with request ID and actor
-- **OPA Policy Enforcement** — All payout decisions gated through policy engine
+- **Duplicate Detection** — 60s window for identical requests
+- **Row Locking** — `SELECT FOR UPDATE` serializes concurrent requests
+- **Webhook Verification** — HMAC-SHA256 with constant-time comparison
+- **Structured Errors** — Provider errors sanitized, no secrets leaked
+- **Audit Trail** — Every financial transition recorded
+- **OPA Policy Enforcement** — All decisions gated through policy engine
+- **Credit Guards** — No spending without credit, reservation before payout
+
+---
+
+## OPA Policy Deny Reasons
+
+| Reason | Description |
+|--------|-------------|
+| `agent_frozen` | Agent is frozen |
+| `credit_not_issued` | No credit account exists |
+| `credit_inactive` | Credit account is frozen |
+| `per_tx_cap_exceeded` | Amount exceeds per-transaction cap |
+| `daily_cap_exceeded` | Daily spending cap exceeded |
+| `payee_inactive` | Payee is not active |
+| `credit_exhausted` | Insufficient available credit |
 
 ---
 
@@ -140,28 +221,25 @@ agent-finance/
 
 | Category | Count |
 |----------|-------|
-| Backend pytest tests | 102 |
-| OPA policy tests | 30 |
-| **Total** | **132** |
+| Backend pytest tests | 120+ |
+| OPA policy tests | 35 |
+| **Total** | **155+** |
 
 **Test categories:**
-- Authentication (registration, login, JWT, API keys, frozen agents)
-- Agent workflows (CRUD, IDOR guards, freeze/unfreeze)
-- Payout workflows (allow/deny/approval paths, provider failures, stats)
-- Policy input (daily spend aggregation, IST boundaries)
-- Webhooks (signature, idempotency, unknown payouts, malformed payloads)
-- Security (cross-owner IDOR, token tampering, frozen agents, provider error leaks)
-- RazorpayX (mode mapping, error mapping, provider-ID races)
-- Reconciliation (provider truth, stale marking, 5xx skip)
-- Race conditions (concurrent payouts, double approve, webhook timing)
-- Environment failures (OPA down, missing env, audit coverage)
-- Schema contracts (backend response fields match frontend TypeScript types)
+- Credit engine (issue, reserve, commit, release, concurrent)
+- Credit policy (no credit, exhausted, inactive, allow, precedence)
+- Repayment (create, manual pay, scheduler, default)
+- Credit flow (full, provider failure, default)
+- Authentication (register, login, JWT, API keys)
+- Payout workflows (allow/deny/approval paths)
+- Webhooks (signature, idempotency)
+- Security (IDOR, token tampering, frozen agents)
+- Race conditions (concurrent payouts)
 
 **Run tests:**
 ```bash
 # Backend
 cd backend
-.\.venv\Scripts\activate
 python -m pytest tests/ -v
 
 # OPA policies
@@ -175,120 +253,124 @@ cd policy
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://agentfinance:changeme@localhost:5432/agentfinance` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://...` |
 | `OPA_URL` | OPA server URL | `http://localhost:8181` |
 | `RAZORPAY_MODE` | `test` or `live` | `test` |
 | `RAZORPAY_KEY_ID` | Razorpay API key ID | (required) |
 | `RAZORPAY_KEY_SECRET` | Razorpay API key secret | (required) |
-| `RAZORPAY_WEBHOOK_SECRET` | Webhook signature secret | (required for webhooks) |
-| `RAZORPAY_DEBIT_IDENTIFIER` | RazorpayX payout source account | (required for payouts) |
+| `RAZORPAY_WEBHOOK_SECRET` | Webhook signature secret | (required) |
 | `JWT_SECRET` | JWT signing secret | `dev-secret-change-in-production` |
-| `JWT_EXPIRE_MINUTES` | Token expiry | `1440` (24h) |
 | `CORS_ORIGINS` | Comma-separated allowed origins | `http://localhost:3000` |
-| `NEXT_PUBLIC_API_URL` | Backend URL for frontend | `http://localhost:8000` |
+| `GROQ_API_KEY` | Groq LLM API key | (required for agent demo) |
 
 ---
 
-## Local Development
+## API Endpoints
 
-**Prerequisites:** Python 3.11+, Node.js 18+, PostgreSQL 16, OPA binary
+### Owner Endpoints
 
-```bash
-# 1. Clone and setup
-git clone https://github.com/nek1912/innovaHack.git
-cd innovaHack
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/owner/register` | Register owner |
+| `POST` | `/owner/login` | Login, get JWT |
+| `POST` | `/owner/agents` | Create agent |
+| `POST` | `/owner/agents/{id}/freeze` | Freeze agent |
+| `POST` | `/owner/agents/{id}/payees` | Add payee |
+| `POST` | `/owner/payouts/{id}/approve` | Approve payout |
+| `POST` | `/owner/payouts/{id}/reject` | Reject payout |
 
-# 2. Backend
-cd backend
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -e .
-alembic upgrade head
+### Credit Endpoints
 
-# 3. Start services (from project root)
-.\start_all.ps1    # Starts OPA, backend, frontend, tunnel
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/credit/issue` | Issue credit to agent |
+| `POST` | `/credit/repay` | Process manual repayment |
+| `GET` | `/credit/account/{agent_id}` | Get credit account |
+| `GET` | `/credit/history/{agent_id}` | Get transaction history |
+| `GET` | `/credit/score/{agent_id}` | Get credit score |
+| `GET` | `/credit/repayments/{agent_id}` | Get repayment schedule |
+| `POST` | `/credit/create-repayment` | Create repayment schedule |
+| `POST` | `/owner/credit/freeze/{agent_id}` | Freeze credit |
+| `POST` | `/owner/credit/unfreeze/{agent_id}` | Unfreeze credit |
+| `GET` | `/owner/credit/dashboard` | Credit dashboard summary |
+| `GET` | `/owner/credit/risk` | Risk summary |
 
-**Or manually:**
-```bash
-# Terminal 1 — OPA
-.\tools\opa.exe run --server --addr :8181
+### Agent Demo Endpoints
 
-# Terminal 2 — Backend
-cd backend
-.\.venv\Scripts\activate
-uvicorn app.main:app --reload --port 8000
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/agent-demo/tasks` | List demo tasks |
+| `POST` | `/agent-demo/execute` | Execute demo task |
+| `GET` | `/agent-demo/tools/payees/{id}` | List payees |
+| `GET` | `/agent-demo/tools/credit/{id}` | Check credit |
+| `GET` | `/agent-demo/tools/status/{id}` | Get agent status |
 
-# Terminal 3 — Frontend
-cd frontend
-npm install
-npm run dev
-```
+### Agent Endpoints
 
-**Stop all:**
-```bash
-.\stop_all.ps1
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/agent/request-payout` | Request payout |
+
+### System Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/audit` | Filterable audit log |
+| `POST` | `/webhooks/razorpay` | RazorpayX webhook |
+| `GET` | `/health` | Health check |
 
 ---
 
-## API Documentation
+## Demo Scenarios
 
-Swagger UI available at: `http://localhost:8000/docs`
+| Scenario | Expected Result | PS Criterion |
+|----------|----------------|--------------|
+| Buy GPU Compute (₹1200) | Approved | Trust Design |
+| Purchase Dataset (₹3500) | Approval Required | Repayment/Credit |
+| Purchase Hardware (Unknown) | Rejected | Risk Containment |
+| API Subscription (₹600) | Approved | Technical Soundness |
+| Emergency Compute (₹15000) | Credit Exhausted | Risk Containment |
 
-ReDoc available at: `http://localhost:8000/redoc`
+---
 
-**Key endpoints:**
+## Deployment
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `POST` | `/owner/register` | None | Register owner account |
-| `POST` | `/owner/login` | None | Login, get JWT |
-| `POST` | `/owner/agents` | JWT | Create agent, get API key |
-| `POST` | `/owner/agents/{id}/freeze` | JWT | Freeze agent (kill switch) |
-| `POST` | `/owner/agents/{id}/payees` | JWT | Add payee |
-| `POST` | `/owner/agents/{id}/payouts` | JWT | Request payout (owner) |
-| `POST` | `/owner/payouts/{id}/approve` | JWT | Approve pending payout |
-| `POST` | `/owner/payouts/{id}/reject` | JWT | Reject pending payout |
-| `POST` | `/agent/request-payout` | API Key | Request payout (agent) |
-| `GET` | `/audit` | JWT | Filterable audit log |
-| `POST` | `/webhooks/razorpay` | HMAC | RazorpayX webhook |
-| `GET` | `/health` | None | Health check (DB + OPA) |
+### Render
+
+1. Connect GitHub repository
+2. Set environment variables
+3. Clear build cache on first deploy
+4. Deploy
+
+### Docker
+
+```bash
+docker build -t agent-finance .
+docker run -p 8000:8000 agent-finance
+```
 
 ---
 
 ## Current Limitations
 
 - RazorpayX test mode only — no live payments
-- Credit engine stubs exist but not integrated
-- No repayment or collection workflow
-- No underwriting or risk scoring
+- Repayment is simulated (owner-initiated)
+- No real NACH/e-mandate collection
+- Single-process rate limiting (in-memory)
 - No frontend automated tests
-- No multi-currency support
-- Single-process rate limiting (in-memory, not Redis)
 
 ---
 
-## Future Roadmap
+## Production Readiness
 
-- Credit ledger with reserve/commit/release flow
-- Repayment engine with NACH collection
-- Risk scoring and underwriting
-- Agent-to-agent transfers
-- Multi-owner support with team roles
-- Production RazorpayX integration
-- Frontend E2E tests
-- Redis-backed rate limiting
+Although this is a demo:
 
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open a Pull Request
+- All backend APIs are production-quality
+- All security checks are enabled
+- Audit logging is complete
+- RazorpayX Test Mode only
+- Schema is mandate-ready for future automated collection
+- Repayment execution is simulated (documented limitation)
 
 ---
 
