@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AgentTimeline } from "@/components/AgentTimeline";
+import { api } from "@/lib/api";
 
 interface Task {
   id: string;
@@ -21,18 +22,42 @@ interface TimelineEvent {
   details?: Record<string, unknown>;
 }
 
+interface Agent {
+  id: string;
+  name: string;
+  status: string;
+}
+
 export default function AgentDemoPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [agentId, setAgentId] = useState("");
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [creditInfo, setCreditInfo] = useState<{ available: number; limit: number } | null>(null);
 
   useEffect(() => {
-    fetch("/api/agent-demo/tasks")
+    // Load demo tasks from backend
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/agent-demo/tasks`)
       .then((r) => r.json())
-      .then((d) => setTasks(d.tasks || []));
+      .then((d) => setTasks(d.tasks || []))
+      .catch(() => setTasks([]));
+
+    // Load agents list
+    api.listAgents().then((d) => setAgents(d.agents || [])).catch(() => setAgents([]));
   }, []);
+
+  // Load credit info when agent changes
+  useEffect(() => {
+    if (agentId) {
+      api.getCreditAccount(agentId)
+        .then((d) => setCreditInfo({ available: d.available_credit, limit: d.credit_limit }))
+        .catch(() => setCreditInfo(null));
+    } else {
+      setCreditInfo(null);
+    }
+  }, [agentId]);
 
   const addEvent = (type: TimelineEvent["type"], message: string, details?: Record<string, unknown>) => {
     setEvents((prev) => [
@@ -49,7 +74,7 @@ export default function AgentDemoPage() {
 
   const runTask = async (task: Task) => {
     if (!agentId) {
-      alert("Please enter an Agent ID");
+      alert("Please select an agent first");
       return;
     }
 
@@ -62,13 +87,23 @@ export default function AgentDemoPage() {
     addEvent("thinking", `Estimated cost: ₹${(task.amount_paise / 100).toLocaleString()}`);
 
     try {
-      const response = await fetch("/api/agent-demo/execute", {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_URL}/agent-demo/execute`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
         body: JSON.stringify({ agent_id: agentId, task_id: task.id }),
       });
 
       const result = await response.json();
+
+      if (!response.ok) {
+        addEvent("error", result.detail || `HTTP ${response.status}`);
+        return;
+      }
 
       addEvent("thinking", result.thinking || "Analyzing task...");
 
@@ -90,16 +125,35 @@ export default function AgentDemoPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
+          {/* Agent Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-2">Agent ID</label>
-            <input
-              type="text"
+            <label className="block text-sm font-medium mb-2">Select Agent</label>
+            <select
               value={agentId}
               onChange={(e) => setAgentId(e.target.value)}
-              placeholder="Enter agent UUID"
-              className="w-full px-3 py-2 border border-border rounded-lg bg-elevated text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-cyan"
-            />
+              className="w-full px-3 py-2 border border-border rounded-lg bg-elevated text-text-primary focus:outline-none focus:ring-2 focus:ring-cyan"
+            >
+              <option value="">Select an agent</option>
+              {agents.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name} ({agent.status})
+                </option>
+              ))}
+            </select>
           </div>
+
+          {/* Credit Info */}
+          {creditInfo && (
+            <div className="mb-6 p-4 bg-elevated border border-border rounded-lg">
+              <div className="text-sm text-text-muted mb-2">Available Credit</div>
+              <div className="text-2xl font-mono text-success">
+                ₹{(creditInfo.available / 100).toLocaleString()}
+              </div>
+              <div className="text-xs text-text-muted mt-1">
+                Limit: ₹{(creditInfo.limit / 100).toLocaleString()}
+              </div>
+            </div>
+          )}
 
           <h2 className="text-lg font-semibold mb-3">Demo Tasks</h2>
           <div className="space-y-3">
