@@ -444,8 +444,8 @@ test_over_threshold_daily_cap_denies if {
 
 # --- deny: credit_not_issued ---
 
-test_credit_not_issued {
-    result := data.agent.spend with input as {
+test_credit_not_issued if {
+    not allow with input as {
         "agent_status": "active",
         "per_tx_cap_paise": 10000,
         "daily_cap_paise": 50000,
@@ -455,14 +455,22 @@ test_credit_not_issued {
         "amount_paise": 1000,
         "credit": {"has_credit": false, "available": 0, "reserved": 0, "status": "none"}
     }
-    not result.allow
-    result.deny_reason == "credit_not_issued"
+    deny_reason == "credit_not_issued" with input as {
+        "agent_status": "active",
+        "per_tx_cap_paise": 10000,
+        "daily_cap_paise": 50000,
+        "daily_spent_paise": 0,
+        "payee_active": true,
+        "approval_threshold_paise": 5000,
+        "amount_paise": 1000,
+        "credit": {"has_credit": false, "available": 0, "reserved": 0, "status": "none"}
+    }
 }
 
 # --- deny: credit_inactive ---
 
-test_credit_inactive {
-    result := data.agent.spend with input as {
+test_credit_inactive if {
+    not allow with input as {
         "agent_status": "active",
         "per_tx_cap_paise": 10000,
         "daily_cap_paise": 50000,
@@ -472,14 +480,22 @@ test_credit_inactive {
         "amount_paise": 1000,
         "credit": {"has_credit": true, "available": 5000, "reserved": 0, "status": "frozen"}
     }
-    not result.allow
-    result.deny_reason == "credit_inactive"
+    deny_reason == "credit_inactive" with input as {
+        "agent_status": "active",
+        "per_tx_cap_paise": 10000,
+        "daily_cap_paise": 50000,
+        "daily_spent_paise": 0,
+        "payee_active": true,
+        "approval_threshold_paise": 5000,
+        "amount_paise": 1000,
+        "credit": {"has_credit": true, "available": 5000, "reserved": 0, "status": "frozen"}
+    }
 }
 
 # --- deny: credit_exhausted ---
 
-test_credit_exhausted {
-    result := data.agent.spend with input as {
+test_credit_exhausted if {
+    not allow with input as {
         "agent_status": "active",
         "per_tx_cap_paise": 10000,
         "daily_cap_paise": 50000,
@@ -489,14 +505,22 @@ test_credit_exhausted {
         "amount_paise": 1000,
         "credit": {"has_credit": true, "available": 500, "reserved": 0, "status": "active"}
     }
-    not result.allow
-    result.deny_reason == "credit_exhausted"
+    deny_reason == "credit_exhausted" with input as {
+        "agent_status": "active",
+        "per_tx_cap_paise": 10000,
+        "daily_cap_paise": 50000,
+        "daily_spent_paise": 0,
+        "payee_active": true,
+        "approval_threshold_paise": 5000,
+        "amount_paise": 1000,
+        "credit": {"has_credit": true, "available": 500, "reserved": 0, "status": "active"}
+    }
 }
 
 # --- allow: credit available ---
 
-test_credit_available_allows {
-    result := data.agent.spend with input as {
+test_credit_available_allows if {
+    allow with input as {
         "agent_status": "active",
         "per_tx_cap_paise": 10000,
         "daily_cap_paise": 50000,
@@ -506,13 +530,12 @@ test_credit_available_allows {
         "amount_paise": 1000,
         "credit": {"has_credit": true, "available": 5000, "reserved": 0, "status": "active"}
     }
-    result.allow
 }
 
 # --- precedence: frozen beats credit ---
 
-test_frozen_agent_denied_before_credit {
-    result := data.agent.spend with input as {
+test_frozen_agent_denied_before_credit if {
+    not allow with input as {
         "agent_status": "frozen",
         "per_tx_cap_paise": 10000,
         "daily_cap_paise": 50000,
@@ -522,6 +545,14 @@ test_frozen_agent_denied_before_credit {
         "amount_paise": 1000,
         "credit": {"has_credit": true, "available": 5000, "reserved": 0, "status": "active"}
     }
-    not result.allow
-    result.deny_reason == "agent_frozen"
+    deny_reason == "agent_frozen" with input as {
+        "agent_status": "frozen",
+        "per_tx_cap_paise": 10000,
+        "daily_cap_paise": 50000,
+        "daily_spent_paise": 0,
+        "payee_active": true,
+        "approval_threshold_paise": 5000,
+        "amount_paise": 1000,
+        "credit": {"has_credit": true, "available": 5000, "reserved": 0, "status": "active"}
+    }
 }
