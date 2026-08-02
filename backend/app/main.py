@@ -11,12 +11,19 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.db import async_session
-from app.routers import agent_payouts, owner_admin, audit, webhooks, credit, credit_admin
+from app.routers import agent_payouts, owner_admin, audit, webhooks, credit, credit_admin, agent_demo
 from app.services.reconciliation import reconcile_stale_payouts
+from app.services.repayment import run_repayment_scheduler
 
 logger = logging.getLogger("app.access")
 
 scheduler = AsyncIOScheduler()
+
+
+async def run_repayment_scheduler_job():
+    async with async_session() as session:
+        await run_repayment_scheduler(session)
+        await session.commit()
 
 
 @asynccontextmanager
@@ -26,6 +33,13 @@ async def lifespan(app: FastAPI):
         "interval",
         minutes=10,
         id="reconcile_stale_payouts",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        run_repayment_scheduler_job,
+        "interval",
+        hours=1,
+        id="repayment_scheduler",
         replace_existing=True,
     )
     scheduler.start()
@@ -84,6 +98,7 @@ app.include_router(audit.router)
 app.include_router(webhooks.router)
 app.include_router(credit.router)
 app.include_router(credit_admin.router)
+app.include_router(agent_demo.router)
 
 
 @app.get("/health")

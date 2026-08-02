@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24
     cors_origins: str = "http://localhost:3000"
+    groq_api_key: str = ""
 
     model_config = {"env_file": str(_ROOT_ENV), "extra": "ignore"}
 
