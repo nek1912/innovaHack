@@ -29,6 +29,7 @@ export default function AgentDetailPage() {
   const [payouts, setPayouts] = useState<PayoutDetail[]>([]);
   const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [showAddPayee, setShowAddPayee] = useState(false);
   const [showRequestPayout, setShowRequestPayout] = useState(false);
@@ -50,8 +51,9 @@ export default function AgentDetailPage() {
         setPayees(payeesRes.payees);
         setPayouts(payoutsRes.payouts);
         setAuditEntries(auditRes.entries);
+        setLoadError("");
       })
-      .catch(() => { window.location.href = "/login"; })
+      .catch(() => { setLoadError("Failed to load agent details — check that the backend is reachable."); })
       .finally(() => setLoading(false));
   }, [agentId]);
 
@@ -117,7 +119,7 @@ export default function AgentDetailPage() {
   if (!agent) {
     return (
       <div className="text-center py-12">
-        <p className="text-text-muted">Agent not found</p>
+        <p className="text-text-muted">{loadError || "Agent not found"}</p>
         <Link href="/agents"><Button variant="ghost" className="mt-4">Back to agents</Button></Link>
       </div>
     );

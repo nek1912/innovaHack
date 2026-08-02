@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AgentFinance",
+  title: "TrustPay",
   description: "Control your autonomous financial agents",
 };
 

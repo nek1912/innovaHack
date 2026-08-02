@@ -38,7 +38,7 @@ export default function LoginPage() {
             <Shield size={20} className="text-text-muted" strokeWidth={1.5} />
           </div>
           <div>
-            <h1 className="text-base font-medium text-text-primary">AgentFinance</h1>
+            <h1 className="text-base font-medium text-text-primary">TrustPay</h1>
             <p className="text-xs text-text-muted">Control System</p>
           </div>
         </div>

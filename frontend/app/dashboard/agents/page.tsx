@@ -25,10 +25,12 @@ export default function AgentsPage() {
   const [creating, setCreating] = useState(false);
   const { toast } = useToast();
 
+  const [loadError, setLoadError] = useState("");
+
   const load = () => {
     api.listAgents()
-      .then((d) => setAgents(d.agents))
-      .catch(() => { window.location.href = "/login"; })
+      .then((d) => { setAgents(d.agents); setLoadError(""); })
+      .catch(() => { setLoadError("Failed to load agents — check that the backend is reachable."); })
       .finally(() => setLoading(false));
   };
 
@@ -72,6 +74,12 @@ export default function AgentsPage() {
         </div>
         <Button onClick={() => setShowCreate(true)}><Plus size={16} /> Create agent</Button>
       </div>
+
+      {loadError && (
+        <div className="mb-6 flex items-center gap-3 bg-warning-bg border border-warning/20 rounded-[10px] px-4 py-3">
+          <p className="text-sm text-warning">{loadError}</p>
+        </div>
+      )}
 
       {/* API Key Modal */}
       <Modal open={!!showApiKey} onClose={() => setShowApiKey(null)} title="Agent created">
