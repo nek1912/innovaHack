@@ -1,16 +1,22 @@
-#!/bin/bash
+#!/bin/sh
+
 set -e
 
-# Start OPA in background
-opa run --server --addr :8181 /app/policy &
-OPA_PID=$!
+echo "Starting OPA..."
 
-# Wait for OPA to be ready
-sleep 2
+opa run \
+    --server \
+    --addr=127.0.0.1:8181 \
+    /app/policy &
 
-# Run migrations
+echo "Running migrations..."
+
 cd /app/backend
+
 alembic upgrade head
 
-# Start FastAPI
-exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+echo "Starting FastAPI..."
+
+exec uvicorn app.main:app \
+    --host 0.0.0.0 \
+    --port 8000

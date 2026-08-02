@@ -2,22 +2,31 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# System packages
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Install OPA
 ADD https://openpolicyagent.org/downloads/v0.68.0/opa_linux_amd64_static /usr/local/bin/opa
 RUN chmod +x /usr/local/bin/opa
 
-# Install backend dependencies
-COPY backend/pyproject.toml backend/pyproject.toml
-RUN pip install --no-cache-dir ./backend
+# Copy backend first
+COPY backend/ ./backend
 
-# Copy backend code
-COPY backend/ backend/
-COPY policy/ policy/
+# Install backend
+WORKDIR /app/backend
+RUN pip install --upgrade pip
+RUN pip install .
 
-# Run migrations and start services
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
+# Return to workdir
+WORKDIR /app
+
+# Copy policies
+COPY policy ./policy
+
+# Copy startup script
+COPY start.sh .
+RUN chmod +x start.sh
 
 EXPOSE 8000
 
-CMD ["/start.sh"]
+CMD ["./start.sh"]
