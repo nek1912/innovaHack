@@ -1,32 +1,31 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
-type ButtonVariant = "primary" | "danger" | "ghost" | "success" | "amber";
-
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
+  variant?: "primary" | "ghost" | "danger" | "success";
   size?: "sm" | "md" | "lg";
 }
 
-const variantStyles: Record<ButtonVariant, string> = {
-  primary: "bg-cyan text-primary-foreground hover:bg-cyan/90",
-  danger: "bg-red text-white hover:bg-red/90",
-  ghost: "bg-transparent text-text-secondary hover:bg-elevated hover:text-text-primary",
-  success: "bg-green text-primary-foreground hover:bg-green/90",
-  amber: "bg-amber text-primary-foreground hover:bg-amber/90",
-};
-
-const sizeStyles = {
-  sm: "px-2 py-1 text-xs",
-  md: "px-3 py-1.5 text-sm",
-  lg: "px-4 py-2 text-sm",
-};
-
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "primary", size = "md", className = "", children, ...props }, ref) => {
+    const base = "inline-flex items-center justify-center gap-2 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer";
+
+    const variants: Record<string, string> = {
+      primary: "bg-lime text-ink border-none hover:bg-lime-hover",
+      ghost: "bg-transparent text-text-primary border-none hover:underline",
+      danger: "bg-danger text-text-inverse border-none hover:opacity-90",
+      success: "bg-safe text-text-inverse border-none hover:opacity-90",
+    };
+
+    const sizes: Record<string, string> = {
+      sm: "h-8 px-3 text-xs rounded-md",
+      md: "h-10 px-5 text-sm rounded-[6px]",
+      lg: "h-11 px-6 text-sm rounded-[6px]",
+    };
+
     return (
       <button
         ref={ref}
-        className={`inline-flex items-center justify-center gap-2 rounded font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
         {...props}
       >
         {children}
@@ -36,3 +35,4 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 );
 
 Button.displayName = "Button";
+export { Button };

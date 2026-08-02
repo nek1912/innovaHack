@@ -1,31 +1,39 @@
-import { ReactNode } from "react";
+import { HTMLAttributes, forwardRef } from "react";
 
-interface CardProps {
-  children: ReactNode;
-  className?: string;
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
   padding?: boolean;
 }
 
-export function Card({ children, className = "", padding = true }: CardProps) {
+const Card = forwardRef<HTMLDivElement, CardProps>(
+  ({ padding = true, className = "", children, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={`bg-canvas border border-border-warm rounded-[10px] ${padding ? "p-6" : ""} ${className}`}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+);
+
+Card.displayName = "Card";
+
+function CardHeader({ className = "", children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`bg-surface border border-border rounded-lg ${padding ? "p-4" : ""} ${className}`}>
+    <div className={`flex items-center justify-between mb-4 ${className}`} {...props}>
       {children}
     </div>
   );
 }
 
-export function CardHeader({ children, className = "" }: { children: ReactNode; className?: string }) {
+function CardTitle({ className = "", children, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <div className={`flex items-center justify-between mb-4 ${className}`}>
-      {children}
-    </div>
-  );
-}
-
-export function CardTitle({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return (
-    <h3 className={`text-sm font-semibold text-text-secondary uppercase tracking-wide ${className}`}>
+    <h3 className={`text-sm font-medium text-text-primary ${className}`} {...props}>
       {children}
     </h3>
   );
 }
+
+export { Card, CardHeader, CardTitle };

@@ -1,52 +1,64 @@
-type BadgeVariant = "green" | "amber" | "red" | "cyan" | "purple" | "default";
+import { HTMLAttributes, forwardRef } from "react";
 
-interface BadgeProps {
-  children: React.ReactNode;
-  variant?: BadgeVariant;
-  className?: string;
-  pulse?: boolean;
+interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+  variant?: "default" | "green" | "red" | "amber" | "cyan" | "purple";
 }
 
-const variantStyles: Record<BadgeVariant, string> = {
-  green: "bg-green-dim text-green border border-green/30",
-  amber: "bg-amber-dim text-amber border border-amber/30",
-  red: "bg-red-dim text-red border border-red/30",
-  cyan: "bg-cyan-dim text-cyan border border-cyan/30",
-  purple: "bg-purple-dim text-purple border border-purple/30",
-  default: "bg-elevated text-text-secondary border border-border",
+function getStatusVariant(status: string): "green" | "red" | "amber" | "default" {
+  switch (status) {
+    case "active":
+    case "approved":
+    case "paid":
+    case "policy_allowed":
+    case "unfreeze":
+    case "credit_unfrozen":
+    case "repayment_paid":
+      return "green";
+    case "frozen":
+    case "denied":
+    case "rejected":
+    case "failed":
+    case "late":
+    case "defaulted":
+    case "policy_denied":
+    case "freeze":
+    case "credit_frozen":
+    case "repayment_late":
+    case "repayment_defaulted":
+      return "red";
+    case "pending":
+    case "approval_required":
+    case "processing":
+    case "credit_reserved":
+    case "repayment_created":
+      return "amber";
+    default:
+      return "default";
+  }
+}
+
+const variantStyles: Record<string, string> = {
+  default: "bg-surface-warm text-text-secondary",
+  green: "bg-safe-bg text-safe",
+  red: "bg-danger-bg text-danger",
+  amber: "bg-warning-bg text-warning",
+  cyan: "bg-surface-warm text-text-secondary",
+  purple: "bg-surface-warm text-text-secondary",
 };
 
-export function Badge({ children, variant = "default", className = "", pulse = false }: BadgeProps) {
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${variantStyles[variant]} ${pulse ? "animate-pulse-glow" : ""} ${className}`}
-    >
-      {children}
-    </span>
-  );
-}
+const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
+  ({ variant = "default", className = "", children, ...props }, ref) => {
+    return (
+      <span
+        ref={ref}
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-mono text-[11px] font-medium uppercase tracking-wider ${variantStyles[variant]} ${className}`}
+        {...props}
+      >
+        {children}
+      </span>
+    );
+  }
+);
 
-export function getStatusVariant(status: string): BadgeVariant {
-  const map: Record<string, BadgeVariant> = {
-    active: "green",
-    frozen: "red",
-    approval_required: "amber",
-    queued: "cyan",
-    processing: "cyan",
-    denied: "red",
-    rejected: "red",
-    processed: "green",
-    allow: "green",
-    requires_approval: "amber",
-    policy_denied: "red",
-    policy_allowed: "green",
-    approved: "green",
-    payout_webhook: "purple",
-    payout_requested: "cyan",
-    freeze: "red",
-    unfreeze: "green",
-    failed: "red",
-    pending: "amber",
-  };
-  return map[status] || "default";
-}
+Badge.displayName = "Badge";
+export { Badge, getStatusVariant };
