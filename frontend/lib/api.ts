@@ -101,6 +101,15 @@ export interface CreditDashboardData {
   total_reserved: number;
 }
 
+export interface Repayment {
+  id: string;
+  due_date: string;
+  amount: number;
+  status: string;
+  paid_amount: number;
+  repayment_method: string;
+}
+
 export interface CreditRiskData {
   overall_risk: string;
   overall_score: number;
@@ -240,4 +249,14 @@ export const api = {
 
   unfreezeCredit: (agentId: string) =>
     request<{ status: string }>(`/owner/credit/unfreeze/${agentId}`, { method: "POST" }),
+
+  // Repayments
+  getRepayments: (agentId: string) =>
+    request<{ repayments: Repayment[]; total: number }>(`/credit/repayments/${agentId}`),
+
+  repayCredit: (repaymentId: string) =>
+    request<{ id: string; status: string; paid_amount: number }>("/credit/repay", {
+      method: "POST",
+      body: JSON.stringify({ repayment_id: repaymentId }),
+    }),
 };
