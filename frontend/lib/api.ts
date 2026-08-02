@@ -72,6 +72,25 @@ export interface PayoutResponse {
   policy_reason: string | null;
 }
 
+export interface CreditAccountDetail {
+  id: string;
+  agent_id: string;
+  credit_limit: number;
+  available_credit: number;
+  used_credit: number;
+  reserved_credit: number;
+  status: string;
+}
+
+export interface CreditTransaction {
+  id: string;
+  type: string;
+  amount: number;
+  balance_after: number;
+  reason: string;
+  created_at: string;
+}
+
 export interface CreditDashboardData {
   total_accounts: number;
   active_accounts: number;
@@ -209,4 +228,16 @@ export const api = {
 
   getCreditRisk: () =>
     request<CreditRiskData>("/owner/credit/risk"),
+
+  getCreditAccount: (agentId: string) =>
+    request<CreditAccountDetail>(`/credit/account/${agentId}`),
+
+  getCreditHistory: (agentId: string) =>
+    request<{ transactions: CreditTransaction[]; total: number }>(`/credit/history/${agentId}`),
+
+  freezeCredit: (agentId: string) =>
+    request<{ status: string }>(`/owner/credit/freeze/${agentId}`, { method: "POST" }),
+
+  unfreezeCredit: (agentId: string) =>
+    request<{ status: string }>(`/owner/credit/unfreeze/${agentId}`, { method: "POST" }),
 };

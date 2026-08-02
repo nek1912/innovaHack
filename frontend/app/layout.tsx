@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Sidebar } from "@/components/Sidebar";
 import { ClientProviders } from "@/components/ClientProviders";
 
 export const metadata: Metadata = {
@@ -19,12 +18,7 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
-        <Sidebar />
-        <div className="md:ml-60 min-h-screen">
-          <main id="main-content" className="p-4 md:p-6 pt-16 md:pt-6">
-            <ClientProviders>{children}</ClientProviders>
-          </main>
-        </div>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

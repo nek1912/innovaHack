@@ -22,7 +22,7 @@ export default function LoginPage() {
         : () => api.login(email, password);
       const { access_token } = await fn();
       localStorage.setItem("token", access_token);
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

@@ -9,7 +9,6 @@ import {
   FileText,
   Settings,
   Shield,
-  CreditCard,
   LogOut,
   Menu,
   X,
@@ -17,9 +16,8 @@ import {
 import { Badge } from "./ui/Badge";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/agents", label: "Agents", icon: Bot },
-  { href: "/credit", label: "Credit", icon: CreditCard },
   { href: "/audit", label: "Audit Logs", icon: FileText },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
