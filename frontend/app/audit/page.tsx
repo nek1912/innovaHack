@@ -20,6 +20,16 @@ const EVENT_TYPES = [
   { value: "freeze", label: "Frozen" },
   { value: "unfreeze", label: "Unfrozen" },
   { value: "payout_webhook", label: "Webhook Event" },
+  { value: "credit_issued", label: "Credit Issued" },
+  { value: "credit_reserved", label: "Credit Reserved" },
+  { value: "credit_committed", label: "Credit Committed" },
+  { value: "credit_released", label: "Credit Released" },
+  { value: "credit_frozen", label: "Credit Frozen" },
+  { value: "credit_unfrozen", label: "Credit Unfrozen" },
+  { value: "repayment_created", label: "Repayment Created" },
+  { value: "repayment_paid", label: "Repayment Paid" },
+  { value: "repayment_late", label: "Repayment Late" },
+  { value: "repayment_defaulted", label: "Repayment Defaulted" },
 ];
 
 export default function AuditPage() {
