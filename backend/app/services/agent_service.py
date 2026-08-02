@@ -57,6 +57,7 @@ class AgentService:
         task_id: str,
         task_description: str,
         session: AsyncSession,
+        payee_id: str | None = None,
     ) -> dict:
         result = await session.execute(select(Agent).where(Agent.id == agent_id))
         agent = result.scalar_one_or_none()
@@ -76,6 +77,7 @@ class AgentService:
             "credit_limit": credit_account.credit_limit if credit_account else 0,
             "daily_cap": agent.daily_cap_paise,
             "per_tx_cap": agent.per_tx_cap_paise,
+            "payee_id": payee_id,
         }
 
         try:

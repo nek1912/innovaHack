@@ -54,10 +54,15 @@ async def execute_task(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
+    # Get the first active payee for this agent
+    payees = await list_allowed_payees(request.agent_id, db)
+    payee_id = payees[0]["id"] if payees else None
+
     return await agent_service.execute_task(
         agent_id=request.agent_id,
         task_id=task["id"],
         task_description=task["description"],
+        payee_id=payee_id,
         session=db,
     )
 

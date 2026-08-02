@@ -28,6 +28,13 @@ interface Agent {
   status: string;
 }
 
+interface Payee {
+  id: string;
+  label: string;
+  vpa: string | null;
+  bank_account: string | null;
+}
+
 export default function AgentDemoPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -36,6 +43,7 @@ export default function AgentDemoPage() {
   const [agentId, setAgentId] = useState("");
   const [agents, setAgents] = useState<Agent[]>([]);
   const [creditInfo, setCreditInfo] = useState<{ available: number; limit: number } | null>(null);
+  const [payees, setPayees] = useState<Payee[]>([]);
 
   useEffect(() => {
     // Load demo tasks from backend
@@ -56,6 +64,22 @@ export default function AgentDemoPage() {
         .catch(() => setCreditInfo(null));
     } else {
       setCreditInfo(null);
+    }
+  }, [agentId]);
+
+  // Load payees when agent changes
+  useEffect(() => {
+    if (agentId) {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const token = localStorage.getItem("token");
+      fetch(`${API_URL}/agent-demo/tools/payees/${agentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((d) => setPayees(d.payees || []))
+        .catch(() => setPayees([]));
+    } else {
+      setPayees([]);
     }
   }, [agentId]);
 
@@ -152,6 +176,24 @@ export default function AgentDemoPage() {
               <div className="text-xs text-text-muted mt-1">
                 Limit: ₹{(creditInfo.limit / 100).toLocaleString()}
               </div>
+            </div>
+          )}
+
+          {/* Payees */}
+          {agentId && (
+            <div className="mb-6 p-4 bg-elevated border border-border rounded-lg">
+              <div className="text-sm font-medium mb-2">Approved Payees</div>
+              {payees.length === 0 ? (
+                <p className="text-sm text-text-muted">No payees found. Ask the owner to add one.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {payees.map((p) => (
+                    <li key={p.id} className="text-sm text-text-secondary">
+                      {p.label} — {p.vpa || p.bank_account || "No payment details"}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
 

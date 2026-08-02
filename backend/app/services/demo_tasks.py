@@ -1,48 +1,48 @@
 DEMO_TASKS = {
-    "buy_gpu_compute": {
-        "id": "buy_gpu_compute",
-        "name": "Buy GPU Compute",
-        "description": "Purchase additional cloud compute for AI model training. GPU inventory is low.",
+    "buy_cloud_credits": {
+        "id": "buy_cloud_credits",
+        "name": "Buy Cloud Credits",
+        "description": "Purchase additional cloud compute credits for model training.",
         "vendor": "AWS",
-        "amount_paise": 120000,
+        "amount_paise": 10000,  # ₹100
+        "expected_result": "approved",
+        "scenario": "normal_approval",
+    },
+    "pay_api_subscription": {
+        "id": "pay_api_subscription",
+        "name": "Pay API Subscription",
+        "description": "Pay monthly subscription for AI API access.",
+        "vendor": "Anthropic",
+        "amount_paise": 12000,  # ₹120
         "expected_result": "approved",
         "scenario": "normal_approval",
     },
     "purchase_dataset": {
         "id": "purchase_dataset",
         "name": "Purchase Dataset",
-        "description": "Acquire training dataset from Kaggle for new model development.",
+        "description": "Acquire training dataset for new model development.",
         "vendor": "Kaggle",
-        "amount_paise": 350000,
+        "amount_paise": 15000,  # ₹150
         "expected_result": "approval_required",
         "scenario": "approval_required",
     },
-    "purchase_hardware": {
-        "id": "purchase_hardware",
-        "name": "Purchase Hardware",
-        "description": "Order specialized GPU hardware from an unapproved vendor.",
-        "vendor": "Unknown",
-        "amount_paise": 500000,
-        "expected_result": "rejected",
-        "scenario": "unknown_vendor",
-    },
-    "api_subscription": {
-        "id": "api_subscription",
-        "name": "API Subscription",
-        "description": "Subscribe to Anthropic API for advanced AI capabilities.",
-        "vendor": "Anthropic",
-        "amount_paise": 60000,
+    "rent_test_compute": {
+        "id": "rent_test_compute",
+        "name": "Rent Test Compute",
+        "description": "Rent GPU compute for testing new model architecture.",
+        "vendor": "AWS",
+        "amount_paise": 10000,  # ₹100
         "expected_result": "approved",
         "scenario": "normal_approval",
     },
-    "emergency_compute": {
-        "id": "emergency_compute",
-        "name": "Emergency Compute",
-        "description": "Urgent need for additional compute resources for time-sensitive training.",
-        "vendor": "AWS",
-        "amount_paise": 1500000,
-        "expected_result": "credit_exhausted",
-        "scenario": "credit_exhausted",
+    "emergency_extra_request": {
+        "id": "emergency_extra_request",
+        "name": "Emergency Extra Request",
+        "description": "Urgent need for additional compute resources.",
+        "vendor": "Unknown",
+        "amount_paise": 25000,  # ₹250
+        "expected_result": "rejected",
+        "scenario": "unknown_vendor",
     },
 }
 
