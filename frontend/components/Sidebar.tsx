@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   X,
+  Play,
 } from "lucide-react";
 import { Badge } from "./ui/Badge";
 
@@ -20,6 +21,7 @@ const navItems = [
   { href: "/agents", label: "Agents", icon: Bot },
   { href: "/audit", label: "Audit Logs", icon: FileText },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/agent-demo", label: "Agent Demo", icon: Play },
 ];
 
 export function Sidebar() {
