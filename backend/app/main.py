@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.db import async_session
-from app.routers import agent_payouts, owner_admin, audit, webhooks, credit
+from app.routers import agent_payouts, owner_admin, audit, webhooks, credit, credit_admin
 from app.services.reconciliation import reconcile_stale_payouts
 
 logger = logging.getLogger("app.access")
@@ -83,6 +83,7 @@ app.include_router(owner_admin.router)
 app.include_router(audit.router)
 app.include_router(webhooks.router)
 app.include_router(credit.router)
+app.include_router(credit_admin.router)
 
 
 @app.get("/health")
