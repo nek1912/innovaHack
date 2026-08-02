@@ -20,6 +20,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/agents", label: "Agents", icon: Bot },
   { href: "/dashboard/credit", label: "Credit", icon: CreditCard },
+  { href: "/dashboard/agent-demo", label: "Agent Demo", icon: Play },
   { href: "/dashboard/audit", label: "Audit Logs", icon: FileText },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
