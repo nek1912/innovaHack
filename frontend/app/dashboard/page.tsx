@@ -7,42 +7,29 @@ import { Badge, getStatusVariant } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableEmpty } from "@/components/ui/Table";
 import { useToast } from "@/components/Toast";
-import {
-  Users,
-  UserCheck,
-  UserX,
-  Wallet,
-  TrendingUp,
-  Clock,
-  XCircle,
-  CheckCircle,
-  AlertTriangle,
-  Shield,
-  Activity,
-} from "lucide-react";
 import Link from "next/link";
 
 function formatPaise(paise: number) {
-  return `Γé╣${(paise / 100).toLocaleString("en-IN")}`;
+  return `₹${(paise / 100).toLocaleString("en-IN")}`;
 }
 
 function SpendBar({ stats }: { stats: DashboardStats }) {
   const limit = stats.today_limit_paise || 1;
   const pct = Math.min((stats.today_spend_paise / limit) * 100, 100);
-  const tone = pct >= 90 ? "bg-red" : pct >= 70 ? "bg-amber" : "bg-green";
+  const barColor = pct >= 90 ? "bg-danger" : pct >= 70 ? "bg-warning" : "bg-safe";
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Today&apos;s Spend vs Limit</CardTitle>
+        <CardTitle>Today&apos;s spend vs limit</CardTitle>
       </CardHeader>
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-text-secondary">{formatPaise(stats.today_spend_paise)} spent</span>
+          <span className="text-text-primary">{formatPaise(stats.today_spend_paise)} spent</span>
           <span className="text-text-muted">{formatPaise(stats.today_limit_paise)} limit</span>
         </div>
-        <div className="h-3 bg-elevated rounded-full overflow-hidden">
-          <div className={`h-full ${tone} rounded-full transition-all`} style={{ width: `${pct}%` }} />
+        <div className="h-2 bg-surface-warm rounded-full overflow-hidden">
+          <div className={`h-full ${barColor} rounded-full transition-all`} style={{ width: `${pct}%` }} />
         </div>
         <p className="text-xs text-text-muted">{pct.toFixed(0)}% of daily capacity used</p>
       </div>
@@ -50,99 +37,43 @@ function SpendBar({ stats }: { stats: DashboardStats }) {
   );
 }
 
-function HealthCards({ stats }: { stats: DashboardStats }) {
-  const success = stats.payment_success_rate;
-  const successTone = success === null ? "text-text-muted" : success >= 95 ? "text-green" : success >= 80 ? "text-amber" : "text-red";
+function SummaryCards({ stats }: { stats: DashboardStats }) {
   const cards = [
-    {
-      label: "Provider",
-      value: stats.provider_configured ? (stats.provider_mode || "configured") : "Not configured",
-      icon: Activity,
-      color: stats.provider_configured ? "text-green" : "text-red",
-    },
-    {
-      label: "Policy Violations",
-      value: stats.policy_violations,
-      icon: Shield,
-      color: stats.policy_violations > 0 ? "text-amber" : "text-green",
-    },
-    {
-      label: "Payment Success",
-      value: success === null ? "ΓÇö" : `${success.toFixed(1)}%`,
-      icon: CheckCircle,
-      color: successTone,
-    },
-    {
-      label: "Stale / Local Errors",
-      value: `${stats.stale_payouts} / ${stats.local_error_payouts}`,
-      icon: AlertTriangle,
-      color: stats.stale_payouts + stats.local_error_payouts > 0 ? "text-red" : "text-green",
-    },
-    {
-      label: "Last Reconciled",
-      value: stats.last_reconciled_at
-        ? new Date(stats.last_reconciled_at).toLocaleString()
-        : "Never",
-      icon: Activity,
-      color: stats.last_reconciled_at ? "text-cyan" : "text-amber",
-    },
+    { label: "Total Agents", value: stats.total_agents.toLocaleString("en-IN") },
+    { label: "Active", value: stats.active_agents.toLocaleString("en-IN") },
+    { label: "Frozen", value: stats.frozen_agents.toLocaleString("en-IN") },
+    { label: "Pending Approvals", value: stats.pending_approvals.toLocaleString("en-IN") },
   ];
 
   return (
-    <div>
-      {!stats.provider_configured && (
-        <div className="mb-4 flex items-center gap-3 bg-red/10 border border-red/30 rounded-lg px-4 py-3">
-          <AlertTriangle size={18} className="text-red" aria-hidden="true" />
-          <p className="text-sm text-red">
-            Payment provider is not configured ΓÇö payouts will fail until RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET are set.
-          </p>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {cards.map((card) => (
+        <div key={card.label} className="bg-surface-warm border border-border-cool rounded-[10px] p-5">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted mb-1">{card.label}</p>
+          <p className="text-2xl font-normal text-text-primary">{card.value}</p>
         </div>
-      )}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        {cards.map((card) => (
-          <Card key={card.label}>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg bg-elevated flex items-center justify-center ${card.color}`} aria-hidden="true">
-                <card.icon size={20} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-text-muted">{card.label}</p>
-                <p className="text-sm font-bold truncate">{card.value}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      ))}
     </div>
   );
 }
 
-function SummaryCards({ stats }: { stats: DashboardStats }) {
+function HealthCards({ stats }: { stats: DashboardStats }) {
+  const success = stats.payment_success_rate;
   const cards = [
-    { label: "Total Agents", value: stats.total_agents.toLocaleString("en-IN"), icon: Users, color: "text-cyan" },
-    { label: "Active Agents", value: stats.active_agents.toLocaleString("en-IN"), icon: UserCheck, color: "text-green" },
-    { label: "Frozen Agents", value: stats.frozen_agents.toLocaleString("en-IN"), icon: UserX, color: "text-red" },
-    { label: "Total Payees", value: stats.total_payees.toLocaleString("en-IN"), icon: Wallet, color: "text-purple" },
-    { label: "Today's Spend", value: formatPaise(stats.today_spend_paise), icon: TrendingUp, color: "text-green" },
-    { label: "Today's Limit", value: formatPaise(stats.today_limit_paise), icon: TrendingUp, color: "text-cyan" },
-    { label: "Pending Approvals", value: stats.pending_approvals.toLocaleString("en-IN"), icon: Clock, color: "text-amber" },
-    { label: "Failed Payouts", value: stats.failed_payouts.toLocaleString("en-IN"), icon: XCircle, color: "text-red" },
+    { label: "Provider", value: stats.provider_configured ? (stats.provider_mode || "configured") : "Not configured" },
+    { label: "Policy Violations", value: String(stats.policy_violations) },
+    { label: "Payment Success", value: success === null ? "—" : `${success.toFixed(1)}%` },
+    { label: "Stale / Errors", value: `${stats.stale_payouts} / ${stats.local_error_payouts}` },
+    { label: "Last Reconciled", value: stats.last_reconciled_at ? new Date(stats.last_reconciled_at).toLocaleDateString() : "Never" },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
       {cards.map((card) => (
-        <Card key={card.label}>
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg bg-elevated flex items-center justify-center ${card.color}`} aria-hidden="true">
-              <card.icon size={20} />
-            </div>
-            <div>
-              <p className="text-xs text-text-muted">{card.label}</p>
-              <p className="text-xl font-bold">{card.value}</p>
-            </div>
-          </div>
-        </Card>
+        <div key={card.label} className="bg-surface-warm border border-border-cool rounded-[10px] p-4">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted mb-1">{card.label}</p>
+          <p className="text-sm font-medium text-text-primary">{card.value}</p>
+        </div>
       ))}
     </div>
   );
@@ -152,7 +83,7 @@ function ApprovalQueue({ payouts, onApprove, onReject }: { payouts: PayoutDetail
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Pending Approvals</CardTitle>
+        <CardTitle>Pending approvals</CardTitle>
         <Badge variant="amber">{payouts.length}</Badge>
       </CardHeader>
       {payouts.length === 0 ? (
@@ -160,17 +91,17 @@ function ApprovalQueue({ payouts, onApprove, onReject }: { payouts: PayoutDetail
       ) : (
         <div className="space-y-3 max-h-[400px] overflow-y-auto">
           {payouts.map((p) => (
-            <div key={p.id} className="bg-elevated rounded-lg p-3 border border-border">
+            <div key={p.id} className="bg-surface-warm rounded-[10px] p-4 border border-border-cool">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <p className="text-sm font-medium">{p.agent_name}</p>
-                  <p className="text-xs text-text-muted">ΓåÆ {p.payee_label}</p>
+                  <p className="text-sm font-medium text-text-primary">{p.agent_name}</p>
+                  <p className="text-xs text-text-muted">→ {p.payee_label}</p>
                 </div>
                 <span className="text-xs text-text-muted">{new Date(p.created_at).toLocaleTimeString()}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-lg font-bold">{formatPaise(p.amount_paise)}</p>
+                  <p className="text-lg font-medium text-text-primary">{formatPaise(p.amount_paise)}</p>
                   <p className="text-xs text-text-muted">{p.policy_reason || "Above threshold"}</p>
                 </div>
                 <div className="flex gap-2">
@@ -190,9 +121,9 @@ function RecentPayouts({ payouts }: { payouts: PayoutDetail[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Payouts</CardTitle>
+        <CardTitle>Recent payouts</CardTitle>
         <Link href="/audit">
-          <Button variant="ghost" size="sm">View All</Button>
+          <Button variant="ghost" size="sm">View all</Button>
         </Link>
       </CardHeader>
       <Table>
@@ -232,24 +163,12 @@ function RecentPayouts({ payouts }: { payouts: PayoutDetail[] }) {
 }
 
 function AuditPreview({ entries }: { entries: AuditEntry[] }) {
-  const eventColors: Record<string, string> = {
-    payout_requested: "cyan",
-    policy_denied: "red",
-    policy_allowed: "green",
-    approval_required: "amber",
-    approved: "green",
-    rejected: "red",
-    freeze: "red",
-    unfreeze: "green",
-    payout_webhook: "purple",
-  };
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Audit Log Preview</CardTitle>
+        <CardTitle>Audit log preview</CardTitle>
         <Link href="/audit">
-          <Button variant="ghost" size="sm">View All</Button>
+          <Button variant="ghost" size="sm">View all</Button>
         </Link>
       </CardHeader>
       <Table>
@@ -271,7 +190,7 @@ function AuditPreview({ entries }: { entries: AuditEntry[] }) {
                   {new Date(e.created_at).toLocaleString()}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={(eventColors[e.event_type] ?? "default") as "cyan" | "red" | "green" | "amber" | "purple" | "default"}>
+                  <Badge variant={getStatusVariant(e.event_type)}>
                     {e.event_type}
                   </Badge>
                 </TableCell>
@@ -307,7 +226,7 @@ export default function DashboardPage() {
       api.getAuditLog({ limit: 5 }).catch(() => ({ entries: [], total: 0 })),
     ]).then(([s, p, pending, audit]) => {
       setStats(s);
-      if (!s) setDataError("Dashboard stats unavailable ΓÇö check that the backend is reachable.");
+      if (!s) setDataError("Dashboard stats unavailable — check that the backend is reachable.");
       else setDataError("");
       setPayouts(p.payouts || []);
       setPendingPayouts(pending.payouts || []);
@@ -346,22 +265,21 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-text-muted">Loading dashboard...</div>
+        <div className="text-sm text-text-muted">Loading dashboard...</div>
       </div>
     );
   }
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Dashboard Overview</h1>
-        <p className="text-sm text-text-muted">Mission control for your autonomous financial agents</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-normal text-text-primary">Dashboard</h1>
+        <p className="text-sm text-text-muted mt-1">Overview of your agent fleet</p>
       </div>
 
       {dataError && (
-        <div className="mb-4 flex items-center gap-3 bg-amber/10 border border-amber/30 rounded-lg px-4 py-3">
-          <AlertTriangle size={18} className="text-amber" aria-hidden="true" />
-          <p className="text-sm text-amber">{dataError}</p>
+        <div className="mb-6 flex items-center gap-3 bg-warning-bg border border-warning/20 rounded-[10px] px-4 py-3">
+          <p className="text-sm text-warning">{dataError}</p>
         </div>
       )}
 
@@ -377,7 +295,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <AuditPreview entries={auditEntries} />
         </div>
