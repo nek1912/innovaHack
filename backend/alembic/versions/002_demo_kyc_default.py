@@ -1,7 +1,7 @@
 """set demo kyc default
 
-Revision ID: 002
-Revises: 001
+Revision ID: 005
+Revises: 004
 Create Date: 2026-08-02
 """
 from typing import Sequence, Union
@@ -9,8 +9,8 @@ from typing import Sequence, Union
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "002"
-down_revision: Union[str, None] = "001"
+revision: str = "005"
+down_revision: Union[str, None] = "004"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
