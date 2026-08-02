@@ -110,6 +110,9 @@ async def request_payout(
             "payee_inactive": (403, "payee_inactive", "Payee is not active"),
             "per_tx_cap_exceeded": (403, "per_tx_cap_exceeded", "Amount exceeds per-transaction cap"),
             "daily_cap_exceeded": (403, "daily_cap_exceeded", "Daily spending cap exceeded"),
+            "credit_not_issued": (403, "credit_not_issued", "No credit account exists for this agent"),
+            "credit_inactive": (403, "credit_inactive", "Credit account is frozen"),
+            "credit_exhausted": (403, "credit_exhausted", "Insufficient available credit"),
         }
         status, code, msg = deny_map.get(reason, (403, "policy_denied", reason))
         raise_error(status, code, msg)

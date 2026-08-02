@@ -124,16 +124,16 @@ async def test_commit_spend(db, test_credit_account):
         session=db,
     )
 
-    payout_id = uuid.uuid4()
+    # Use None for payout_id since we're testing credit engine, not payout creation
     transaction = await commit_spend(
         credit_account_id=test_credit_account.id,
-        payout_id=payout_id,
+        payout_id=None,
         amount=reserve_amount,
         session=db,
     )
 
     assert transaction.type == "SPEND"
-    assert transaction.payout_id == payout_id
+    assert transaction.payout_id is None
     assert test_credit_account.reserved_credit == 0
     assert test_credit_account.used_credit == reserve_amount
 

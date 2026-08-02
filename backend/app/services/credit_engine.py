@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.deps import log_audit
 from app.models.credit import CreditAccount, CreditTransaction
 from app.models.owner import Agent
 from app.services.underwriting import calculate_score
@@ -57,6 +58,20 @@ async def issue_credit(
     )
     session.add(transaction)
 
+    await log_audit(
+        session,
+        request_id=uuid.uuid4(),
+        event_type="credit_issued",
+        detail={
+            "credit_account_id": str(credit_account.id),
+            "agent_id": str(agent_id),
+            "credit_limit": approved_limit,
+            "score": score,
+            "reason": reason,
+        },
+        agent_id=agent_id,
+    )
+
     return credit_account
 
 
@@ -98,6 +113,17 @@ async def reserve_credit(
     )
     session.add(transaction)
 
+    await log_audit(
+        session,
+        request_id=uuid.uuid4(),
+        event_type="credit_reserved",
+        detail={
+            "credit_account_id": str(credit_account_id),
+            "amount": amount,
+            "available_after": credit_account.available_credit,
+        },
+    )
+
     return transaction
 
 
@@ -134,6 +160,17 @@ async def commit_spend(
     )
     session.add(transaction)
 
+    await log_audit(
+        session,
+        request_id=uuid.uuid4(),
+        event_type="credit_committed",
+        detail={
+            "credit_account_id": str(credit_account_id),
+            "payout_id": str(payout_id),
+            "amount": amount,
+        },
+    )
+
     return transaction
 
 
@@ -168,5 +205,16 @@ async def release_reservation(
         reason="Released reservation on provider failure",
     )
     session.add(transaction)
+
+    await log_audit(
+        session,
+        request_id=uuid.uuid4(),
+        event_type="credit_released",
+        detail={
+            "credit_account_id": str(credit_account_id),
+            "amount": amount,
+            "available_after": credit_account.available_credit,
+        },
+    )
 
     return transaction
