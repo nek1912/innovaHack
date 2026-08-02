@@ -27,84 +27,52 @@ export default function RiskDashboard() {
   }, []);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="text-text-muted">Loading risk data...</div></div>;
+    return <div className="flex items-center justify-center h-64"><div className="text-sm text-text-muted">Loading risk data...</div></div>;
   }
 
   if (!risk) {
     return (
       <div className="text-center py-12">
         <p className="text-text-muted">No risk data available</p>
-        <Link href="/credit" className="text-sm text-cyan hover:underline mt-2 inline-block">Back to Credit Dashboard</Link>
+        <Link href="/credit" className="text-sm text-text-muted hover:underline mt-2 inline-block">Back to credit dashboard</Link>
       </div>
     );
   }
 
   return (
     <div>
-      <Link href="/credit" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-4">
-        <ArrowLeft size={16} /> Back to Credit Dashboard
+      <Link href="/credit" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
+        <ArrowLeft size={16} /> Back to credit dashboard
       </Link>
 
       {/* Overall Risk */}
-      <Card className="mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-cyan/20 flex items-center justify-center text-cyan">
-            <Shield size={24} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">Risk Dashboard</h1>
-            <div className="flex items-center gap-3 mt-1">
-              <Badge variant={riskBadgeVariant(risk.overall_risk)}>{risk.overall_risk}</Badge>
-              <span className="text-xs text-text-muted">Score: {risk.overall_score}</span>
-            </div>
-          </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-normal text-text-primary">Risk dashboard</h1>
+        <div className="flex items-center gap-3 mt-2">
+          <Badge variant={riskBadgeVariant(risk.overall_risk)}>{risk.overall_risk}</Badge>
+          <span className="text-xs text-text-muted">Score: {risk.overall_score}</span>
         </div>
-      </Card>
-
-      {/* Risk Factors */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center text-amber"><AlertTriangle size={20} /></div>
-            <div>
-              <p className="text-xs text-text-muted">Violations (30d)</p>
-              <p className="text-xl font-bold font-mono">{risk.total_violations}</p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center text-amber"><AlertTriangle size={20} /></div>
-            <div>
-              <p className="text-xs text-text-muted">Failures (30d)</p>
-              <p className="text-xl font-bold font-mono">{risk.total_failures}</p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center text-red"><AlertTriangle size={20} /></div>
-            <div>
-              <p className="text-xs text-text-muted">Defaults</p>
-              <p className="text-xl font-bold font-mono text-red">{risk.total_defaults}</p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center text-red"><Lock size={20} /></div>
-            <div>
-              <p className="text-xs text-text-muted">Frozen Agents</p>
-              <p className="text-xl font-bold font-mono text-red">{risk.total_frozen}</p>
-            </div>
-          </div>
-        </Card>
       </div>
 
-      {/* Agent Risk Table */}
+      {/* Risk factors */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: "Violations (30d)", value: risk.total_violations },
+          { label: "Failures (30d)", value: risk.total_failures },
+          { label: "Defaults", value: risk.total_defaults },
+          { label: "Frozen Agents", value: risk.total_frozen },
+        ].map((s) => (
+          <div key={s.label} className="bg-surface-warm border border-border-cool rounded-[10px] p-5">
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted mb-1">{s.label}</p>
+            <p className="text-2xl font-normal font-mono text-text-primary">{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Agent risk table */}
       <Card padding={false}>
         <CardHeader className="px-4 pt-4">
-          <CardTitle>Agent Risk Details</CardTitle>
+          <CardTitle>Agent risk details</CardTitle>
         </CardHeader>
         <Table>
           <TableHeader>
@@ -125,7 +93,7 @@ export default function RiskDashboard() {
               risk.agents.map((agent) => (
                 <TableRow key={agent.agent_id}>
                   <TableCell>
-                    <Link href={`/credit/${agent.agent_id}`} className="text-cyan hover:underline">
+                    <Link href={`/credit/${agent.agent_id}`} className="text-text-primary hover:underline">
                       {agent.agent_name}
                     </Link>
                   </TableCell>
@@ -135,7 +103,7 @@ export default function RiskDashboard() {
                   <TableCell className="font-mono">{agent.risk_score}</TableCell>
                   <TableCell className="font-mono">{agent.violations}</TableCell>
                   <TableCell className="font-mono">{agent.failures}</TableCell>
-                  <TableCell className="font-mono text-red">{agent.defaults}</TableCell>
+                  <TableCell className="font-mono text-danger">{agent.defaults}</TableCell>
                   <TableCell>
                     <Badge variant={agent.is_frozen ? "red" : "green"}>
                       {agent.is_frozen ? "FROZEN" : "Active"}

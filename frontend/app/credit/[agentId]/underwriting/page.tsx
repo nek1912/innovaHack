@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 interface CreditDecision {
   id: string;
@@ -28,86 +31,84 @@ export default function UnderwritingPage() {
       });
   }, [agentId]);
 
-  if (loading) return <div className="p-6">Loading...</div>;
-  if (!decision) return <div className="p-6">No credit decision found</div>;
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="text-sm text-text-muted">Loading...</div></div>;
+  if (!decision) return <div className="flex items-center justify-center h-64"><div className="text-sm text-text-muted">No credit decision found</div></div>;
 
   const factors = decision.reason.split("; ");
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Underwriting Decision</h1>
+    <div>
+      <Link href={`/credit/${agentId}`} className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
+        <ArrowLeft size={16} /> Back to credit account
+      </Link>
+
+      <h1 className="text-3xl font-normal text-text-primary mb-8">Underwriting decision</h1>
 
       {/* Score */}
-      <div className="bg-surface p-6 rounded-lg border border-border">
-        <div className="text-secondary mb-2">Credit Score</div>
-        <div className={`text-6xl font-bold ${
-          decision.score >= 80 ? "text-success" :
+      <div className="bg-surface-warm border border-border-cool rounded-[10px] p-6 mb-6">
+        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted mb-2">Credit score</p>
+        <div className={`text-6xl font-normal ${
+          decision.score >= 80 ? "text-safe" :
           decision.score >= 60 ? "text-warning" :
           "text-danger"
         }`}>
           {decision.score}
         </div>
-        <div className="text-secondary text-sm mt-2">/ 100</div>
+        <p className="text-sm text-text-muted mt-1">/ 100</p>
       </div>
 
       {/* Decision */}
-      <div className="bg-surface p-4 rounded-lg border border-border">
-        <div className="text-secondary">Decision</div>
-        <div className={`text-xl font-bold ${
-          decision.decision === "approved" ? "text-success" : "text-danger"
+      <div className="bg-surface-warm border border-border-cool rounded-[10px] p-5 mb-6">
+        <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted mb-1">Decision</p>
+        <p className={`text-xl font-medium ${
+          decision.decision === "approved" ? "text-safe" : "text-danger"
         }`}>
           {decision.decision.toUpperCase()}
-        </div>
+        </p>
       </div>
 
       {/* Approved Limit */}
       {decision.approved_limit && (
-        <div className="bg-surface p-4 rounded-lg border border-border">
-          <div className="text-secondary">Approved Limit</div>
-          <div className="text-2xl font-mono">
+        <div className="bg-surface-warm border border-border-cool rounded-[10px] p-5 mb-6">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted mb-1">Approved limit</p>
+          <p className="text-2xl font-mono text-text-primary">
             ₹{(decision.approved_limit / 100).toLocaleString()}
-          </div>
+          </p>
         </div>
       )}
 
       {/* Score Factors */}
-      <div className="bg-surface p-4 rounded-lg border border-border">
-        <h2 className="text-lg font-semibold mb-4">Score Factors</h2>
+      <div className="border border-border-warm rounded-[10px] p-5 mb-6">
+        <h2 className="text-sm font-medium text-text-primary mb-4">Score factors</h2>
         <div className="space-y-2">
-          {factors.map((factor, i) => (
-            <div key={i} className="flex items-center">
-              <span className={`mr-2 ${
-                factor.startsWith("owner_verified") ||
-                factor.startsWith("experienced") ||
-                factor.startsWith("good_repayment") ||
-                factor.startsWith("long_active") ||
-                factor.startsWith("some_experience")
-                  ? "text-success"
-                  : "text-danger"
-              }`}>
-                {factor.startsWith("owner_verified") ||
-                 factor.startsWith("experienced") ||
-                 factor.startsWith("good_repayment") ||
-                 factor.startsWith("long_active") ||
-                 factor.startsWith("some_experience")
-                  ? "✓"
-                  : "✗"}
-              </span>
-              <span>{factor}</span>
-            </div>
-          ))}
+          {factors.map((factor, i) => {
+            const isPositive = factor.startsWith("owner_verified") ||
+              factor.startsWith("experienced") ||
+              factor.startsWith("good_repayment") ||
+              factor.startsWith("long_active") ||
+              factor.startsWith("some_experience");
+            return (
+              <div key={i} className="flex items-center text-sm">
+                <span className={`mr-2 ${isPositive ? "text-safe" : "text-danger"}`}>
+                  {isPositive ? "✓" : "✗"}
+                </span>
+                <span className="text-text-primary">{factor}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Decision History */}
-      <div className="bg-surface p-4 rounded-lg border border-border">
-        <div className="text-secondary">Model Version</div>
-        <div className="font-mono">{decision.model_version}</div>
-      </div>
-
-      <div className="bg-surface p-4 rounded-lg border border-border">
-        <div className="text-secondary">Decision Date</div>
-        <div>{new Date(decision.created_at).toLocaleString()}</div>
+      {/* Meta */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-surface-warm border border-border-cool rounded-[10px] p-5">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted mb-1">Model version</p>
+          <p className="font-mono text-sm text-text-primary">{decision.model_version}</p>
+        </div>
+        <div className="bg-surface-warm border border-border-cool rounded-[10px] p-5">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted mb-1">Decision date</p>
+          <p className="text-sm text-text-primary">{new Date(decision.created_at).toLocaleString()}</p>
+        </div>
       </div>
     </div>
   );

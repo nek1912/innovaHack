@@ -54,24 +54,19 @@ export default function RepaymentsPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="text-text-muted">Loading repayments...</div></div>;
+    return <div className="flex items-center justify-center h-64"><div className="text-sm text-text-muted">Loading repayments...</div></div>;
   }
 
   return (
     <div>
-      <Link href={`/credit/${agentId}`} className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-4">
-        <ArrowLeft size={16} /> Back to Credit Account
+      <Link href={`/credit/${agentId}`} className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
+        <ArrowLeft size={16} /> Back to credit account
       </Link>
 
-      <Card className="mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-cyan/20 flex items-center justify-center text-cyan"><CreditCard size={24} /></div>
-          <div>
-            <h1 className="text-xl font-bold">Repayment Schedule</h1>
-            <p className="text-sm text-text-muted mt-1">Repayment is simulated — owner-initiated via API</p>
-          </div>
-        </div>
-      </Card>
+      <div className="mb-8">
+        <h1 className="text-3xl font-normal text-text-primary">Repayment schedule</h1>
+        <p className="text-sm text-text-muted mt-1">Repayment is simulated — owner-initiated via API</p>
+      </div>
 
       <Card>
         <CardHeader>
@@ -80,7 +75,7 @@ export default function RepaymentsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Due Date</TableHead>
+              <TableHead>Due date</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Paid</TableHead>
@@ -101,8 +96,8 @@ export default function RepaymentsPage() {
                   <TableCell className="font-mono">{formatPaise(r.paid_amount)}</TableCell>
                   <TableCell>
                     {(r.status === "pending" || r.status === "late") && (
-                      <Button variant="success" size="sm" onClick={() => handleRepay(r.id)}>
-                        Pay Now
+                      <Button variant="primary" size="sm" onClick={() => handleRepay(r.id)}>
+                        Pay now
                       </Button>
                     )}
                   </TableCell>

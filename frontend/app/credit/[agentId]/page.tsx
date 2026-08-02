@@ -68,107 +68,76 @@ export default function CreditAccountDetailPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="text-text-muted">Loading credit account...</div></div>;
+    return <div className="flex items-center justify-center h-64"><div className="text-sm text-text-muted">Loading credit account...</div></div>;
   }
 
   if (!account) {
     return (
       <div className="text-center py-12">
         <p className="text-text-muted">Credit account not found</p>
-        <Link href="/credit"><Button variant="ghost" className="mt-4">Back to Credit Dashboard</Button></Link>
+        <Link href="/credit"><Button variant="ghost" className="mt-4">Back to credit dashboard</Button></Link>
       </div>
     );
   }
 
   return (
     <div>
-      <Link href="/credit" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-4">
-        <ArrowLeft size={16} /> Back to Credit Dashboard
+      <Link href="/credit" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary mb-6">
+        <ArrowLeft size={16} /> Back to credit dashboard
       </Link>
 
       {/* Header */}
-      <Card className="mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-cyan/20 flex items-center justify-center text-cyan"><CreditCard size={24} /></div>
-            <div>
-              <h1 className="text-xl font-bold">Credit Account</h1>
-              <div className="flex items-center gap-3 mt-1">
-                <Badge variant={account.status === "active" ? "green" : "red"}>{account.status}</Badge>
-                <span className="text-xs text-text-muted">Agent: {agentId.slice(0, 8)}...</span>
-              </div>
-            </div>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-normal text-text-primary">Credit account</h1>
+          <div className="flex items-center gap-3 mt-2">
+            <Badge variant={account.status === "active" ? "green" : "red"}>{account.status}</Badge>
+            <span className="text-xs text-text-muted font-mono">Agent: {agentId.slice(0, 8)}...</span>
           </div>
-          <Button variant={account.status === "active" ? "danger" : "success"} onClick={handleToggleFreeze}>
-            {account.status === "active" ? <><Lock size={16} /> Freeze</> : <><Unlock size={16} /> Unfreeze</>}
-          </Button>
         </div>
-      </Card>
+        <Button variant={account.status === "active" ? "danger" : "success"} onClick={handleToggleFreeze}>
+          {account.status === "active" ? <><Lock size={16} /> Freeze</> : <><Unlock size={16} /> Unfreeze</>}
+        </Button>
+      </div>
 
       {dataError && (
-        <div className="mb-4 flex items-center gap-3 bg-amber/10 border border-amber/30 rounded-lg px-4 py-3">
-          <AlertTriangle size={18} className="text-amber" aria-hidden="true" />
-          <p className="text-sm text-amber">{dataError}</p>
+        <div className="mb-6 flex items-center gap-3 bg-warning-bg border border-warning/20 rounded-[10px] px-4 py-3">
+          <p className="text-sm text-warning">{dataError}</p>
         </div>
       )}
 
-      {/* Balance Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center text-cyan"><CreditCard size={20} /></div>
-            <div>
-              <p className="text-xs text-text-muted">Credit Limit</p>
-              <p className="text-xl font-bold">{formatPaise(account.credit_limit)}</p>
-            </div>
+      {/* Balance cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: "Credit Limit", value: formatPaise(account.credit_limit) },
+          { label: "Available", value: formatPaise(account.available_credit) },
+          { label: "Reserved", value: formatPaise(account.reserved_credit) },
+          { label: "Used", value: formatPaise(account.used_credit) },
+        ].map((s) => (
+          <div key={s.label} className="bg-surface-warm border border-border-cool rounded-[10px] p-5">
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted mb-1">{s.label}</p>
+            <p className="text-2xl font-normal text-text-primary">{s.value}</p>
           </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center text-green"><Activity size={20} /></div>
-            <div>
-              <p className="text-xs text-text-muted">Available</p>
-              <p className="text-xl font-bold text-green">{formatPaise(account.available_credit)}</p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center text-purple"><Shield size={20} /></div>
-            <div>
-              <p className="text-xs text-text-muted">Reserved</p>
-              <p className="text-xl font-bold text-purple">{formatPaise(account.reserved_credit)}</p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center text-amber"><TrendingDown size={20} /></div>
-            <div>
-              <p className="text-xs text-text-muted">Used</p>
-              <p className="text-xl font-bold text-amber">{formatPaise(account.used_credit)}</p>
-            </div>
-          </div>
-        </Card>
+        ))}
       </div>
 
-      {/* Quick Links */}
-      <div className="flex gap-4 mb-6">
-        <Link href={`/credit/${agentId}/underwriting`} className="text-sm text-cyan hover:underline">View Underwriting</Link>
-        <Link href={`/credit/${agentId}/repayments`} className="text-sm text-cyan hover:underline">View Repayments</Link>
+      {/* Quick links */}
+      <div className="flex gap-4 mb-8">
+        <Link href={`/credit/${agentId}/underwriting`} className="text-sm text-text-muted hover:text-text-primary hover:underline">View underwriting</Link>
+        <Link href={`/credit/${agentId}/repayments`} className="text-sm text-text-muted hover:text-text-primary hover:underline">View repayments</Link>
       </div>
 
-      {/* Transaction History */}
+      {/* Transaction history */}
       <Card>
         <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
+          <CardTitle>Transaction history</CardTitle>
         </CardHeader>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Type</TableHead>
               <TableHead>Amount</TableHead>
-              <TableHead>Balance After</TableHead>
+              <TableHead>Balance after</TableHead>
               <TableHead>Reason</TableHead>
               <TableHead>Time</TableHead>
             </TableRow>

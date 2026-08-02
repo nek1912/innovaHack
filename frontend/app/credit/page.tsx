@@ -9,7 +9,7 @@ import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead, TableEmp
 import { Wallet, TrendingUp, TrendingDown, Lock, Shield, AlertTriangle } from "lucide-react";
 
 function formatPaise(paise: number) {
-  return `\u20B9${(paise / 100).toLocaleString("en-IN")}`;
+  return `₹${(paise / 100).toLocaleString("en-IN")}`;
 }
 
 function riskBadgeVariant(level: string): "green" | "amber" | "red" {
@@ -20,26 +20,19 @@ function riskBadgeVariant(level: string): "green" | "amber" | "red" {
 
 function CreditSummary({ data }: { data: CreditDashboardData }) {
   const cards = [
-    { label: "Total Credit Issued", value: formatPaise(data.total_credit_limit), icon: Wallet, color: "text-cyan" },
-    { label: "Available", value: formatPaise(data.total_available), icon: TrendingUp, color: "text-green" },
-    { label: "Used", value: formatPaise(data.total_used), icon: TrendingDown, color: "text-amber" },
-    { label: "Reserved", value: formatPaise(data.total_reserved), icon: Lock, color: "text-purple" },
+    { label: "Total Credit Issued", value: formatPaise(data.total_credit_limit) },
+    { label: "Available", value: formatPaise(data.total_available) },
+    { label: "Used", value: formatPaise(data.total_used) },
+    { label: "Reserved", value: formatPaise(data.total_reserved) },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       {cards.map((card) => (
-        <Card key={card.label}>
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg bg-elevated flex items-center justify-center ${card.color}`} aria-hidden="true">
-              <card.icon size={20} />
-            </div>
-            <div>
-              <p className="text-xs text-text-muted">{card.label}</p>
-              <p className="text-xl font-bold">{card.value}</p>
-            </div>
-          </div>
-        </Card>
+        <div key={card.label} className="bg-surface-warm border border-border-cool rounded-[10px] p-5">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted mb-1">{card.label}</p>
+          <p className="text-2xl font-normal text-text-primary">{card.value}</p>
+        </div>
       ))}
     </div>
   );
@@ -47,36 +40,31 @@ function CreditSummary({ data }: { data: CreditDashboardData }) {
 
 function RiskOverview({ risk }: { risk: CreditRiskData }) {
   return (
-    <Card className="mb-6">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-lg bg-cyan/20 flex items-center justify-center text-cyan">
-          <Shield size={24} />
+    <Card className="mb-8">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="w-10 h-10 rounded-full bg-surface-warm flex items-center justify-center">
+          <Shield size={20} className="text-text-muted" strokeWidth={1.5} />
         </div>
         <div>
-          <h2 className="text-lg font-bold">Risk Overview</h2>
+          <h2 className="text-lg font-medium text-text-primary">Risk overview</h2>
           <div className="flex items-center gap-3 mt-1">
             <Badge variant={riskBadgeVariant(risk.overall_risk)}>{risk.overall_risk}</Badge>
             <span className="text-xs text-text-muted">Score: {risk.overall_score}</span>
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-        <div className="bg-elevated rounded-lg p-3">
-          <p className="text-xs text-text-muted">Violations</p>
-          <p className="text-lg font-bold font-mono">{risk.total_violations}</p>
-        </div>
-        <div className="bg-elevated rounded-lg p-3">
-          <p className="text-xs text-text-muted">Failures</p>
-          <p className="text-lg font-bold font-mono">{risk.total_failures}</p>
-        </div>
-        <div className="bg-elevated rounded-lg p-3">
-          <p className="text-xs text-text-muted">Defaults</p>
-          <p className="text-lg font-bold font-mono text-red">{risk.total_defaults}</p>
-        </div>
-        <div className="bg-elevated rounded-lg p-3">
-          <p className="text-xs text-text-muted">Frozen Agents</p>
-          <p className="text-lg font-bold font-mono text-red">{risk.total_frozen}</p>
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Violations", value: risk.total_violations },
+          { label: "Failures", value: risk.total_failures },
+          { label: "Defaults", value: risk.total_defaults },
+          { label: "Frozen Agents", value: risk.total_frozen },
+        ].map((s) => (
+          <div key={s.label} className="bg-surface-warm rounded-[10px] p-3 border border-border-cool">
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-text-muted">{s.label}</p>
+            <p className="text-lg font-medium font-mono text-text-primary mt-1">{s.value}</p>
+          </div>
+        ))}
       </div>
     </Card>
   );
@@ -86,9 +74,9 @@ function AgentRiskTable({ agents }: { agents: CreditRiskData["agents"] }) {
   return (
     <Card padding={false}>
       <CardHeader className="px-4 pt-4">
-        <CardTitle>Agent Risk Levels</CardTitle>
+        <CardTitle>Agent risk levels</CardTitle>
         <Link href="/credit/risk">
-          <Badge variant="cyan" className="cursor-pointer">View Details</Badge>
+          <Badge variant="cyan" className="cursor-pointer">View details</Badge>
         </Link>
       </CardHeader>
       <Table>
@@ -110,7 +98,7 @@ function AgentRiskTable({ agents }: { agents: CreditRiskData["agents"] }) {
             agents.map((agent) => (
               <TableRow key={agent.agent_id}>
                 <TableCell>
-                  <Link href={`/credit/${agent.agent_id}`} className="text-cyan hover:underline">
+                  <Link href={`/credit/${agent.agent_id}`} className="text-text-primary hover:underline">
                     {agent.agent_name}
                   </Link>
                 </TableCell>
@@ -120,7 +108,7 @@ function AgentRiskTable({ agents }: { agents: CreditRiskData["agents"] }) {
                 <TableCell className="font-mono">{agent.risk_score}</TableCell>
                 <TableCell className="font-mono">{agent.violations}</TableCell>
                 <TableCell className="font-mono">{agent.failures}</TableCell>
-                <TableCell className="font-mono text-red">{agent.defaults}</TableCell>
+                <TableCell className="font-mono text-danger">{agent.defaults}</TableCell>
                 <TableCell>
                   <Badge variant={agent.is_frozen ? "red" : "green"}>
                     {agent.is_frozen ? "FROZEN" : "Active"}
@@ -152,13 +140,13 @@ export default function CreditDashboardPage() {
   }, []);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="text-text-muted">Loading credit dashboard...</div></div>;
+    return <div className="flex items-center justify-center h-64"><div className="text-sm text-text-muted">Loading credit dashboard...</div></div>;
   }
 
   if (!credit && !risk) {
     return (
       <div className="text-center py-12">
-        <AlertTriangle size={48} className="mx-auto text-amber mb-4" />
+        <AlertTriangle size={40} className="mx-auto text-warning mb-4" strokeWidth={1.5} />
         <p className="text-text-muted">Credit data unavailable — check that the backend is reachable.</p>
       </div>
     );
@@ -166,9 +154,9 @@ export default function CreditDashboardPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Credit Dashboard</h1>
-        <p className="text-sm text-text-muted">Overview of credit allocation and risk across all agents</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-normal text-text-primary">Credit dashboard</h1>
+        <p className="text-sm text-text-muted mt-1">Overview of credit allocation and risk across all agents</p>
       </div>
 
       {credit && <CreditSummary data={credit} />}
