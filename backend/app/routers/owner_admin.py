@@ -41,6 +41,8 @@ from app.services.razorpayx import (
 )
 from app.services.policy_input import build_policy_input
 from app.services.opa_client import opa_client
+from app.services.credit_engine import reserve_credit, commit_spend, release_reservation
+from app.models.credit import CreditAccount
 from app.deps import raise_error, log_audit, ist_today_bounds
 
 router = APIRouter(prefix="/owner", tags=["owner"])
@@ -239,6 +241,12 @@ async def approve_payout(
     if not payee:
         raise_error(404, "payee_not_found", "Payee not found")
 
+    # Reserve credit before provider call
+    credit_result = await db.execute(select(CreditAccount).where(CreditAccount.agent_id == payout.agent_id))
+    credit_account = credit_result.scalar_one_or_none()
+    if credit_account:
+        await reserve_credit(credit_account_id=credit_account.id, amount=payout.amount_paise, session=db)
+
     try:
         await ensure_payee_provider_ids(db, payee)
         result = await razorpayx_client.create_payout(
@@ -250,6 +258,8 @@ async def approve_payout(
             narration=f"AFCS {str(payout.id)[:8]}",
         )
     except RazorpayXError as e:
+        if credit_account:
+            await release_reservation(credit_account_id=credit_account.id, amount=payout.amount_paise, session=db)
         payout.razorpay_status = "local_error"
         await log_audit(
             db, uuid.uuid4(), "provider_failure",
@@ -265,6 +275,9 @@ async def approve_payout(
         await db.commit()
         status, code, msg = _provider_error_status(e)
         raise_error(status, code, msg)
+
+    if credit_account:
+        await commit_spend(credit_account_id=credit_account.id, payout_id=payout.id, amount=payout.amount_paise, session=db)
 
     payout.policy_decision = "allow"
     payout.approved_by = owner.id
@@ -375,22 +388,33 @@ async def owner_request_payout(
     db.add(payout)
     await db.flush()
 
+    # Reserve credit before provider call
+    credit_result = await db.execute(select(CreditAccount).where(CreditAccount.agent_id == agent_id))
+    credit_account = credit_result.scalar_one_or_none()
+    if credit_account:
+        await reserve_credit(credit_account_id=credit_account.id, amount=body.amount_paise, session=db)
+
     try:
         await ensure_payee_provider_ids(db, payee)
         result = await razorpayx_client.create_payout(
             fund_account_id=payee.razorpay_fund_account_id,
             amount_paise=body.amount_paise,
             mode=body.mode,
-            purpose=body.purpose or "payout",
+            purpose=(body.purpose or "payout")[:30],
             idempotency_key=str(payout.id),
             narration=f"AFCS {str(payout.id)[:8]}",
         )
     except RazorpayXError as e:
+        if credit_account:
+            await release_reservation(credit_account_id=credit_account.id, amount=body.amount_paise, session=db)
         payout.razorpay_status = "local_error"
         await log_audit(db, request_id, "provider_failure", detail={"payout_id": str(payout.id), "provider_error_code": e.error_code, "provider_status": e.status_code, "description": e.description}, agent_id=agent_id, owner_id=owner.id)
         await db.commit()
         status, code, msg = _provider_error_status(e)
         raise_error(status, code, msg)
+
+    if credit_account:
+        await commit_spend(credit_account_id=credit_account.id, payout_id=payout.id, amount=body.amount_paise, session=db)
 
     payout.razorpay_payout_id = result.get("id")
     payout.razorpay_status = result.get("status", "queued")
